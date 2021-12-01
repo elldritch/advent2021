@@ -3,7 +3,7 @@ module Test.Main
   ) where
 
 import Prelude
-import Advent2021.D1 as D1
+import Advent2021.Puzzles.D1 as D1
 import Data.Array.NonEmpty (cons')
 import Effect (Effect)
 import Effect.Aff (launchAff_)

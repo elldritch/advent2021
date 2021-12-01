@@ -1,7 +1,7 @@
 # advent2021
 
-Running:
+Running a specific puzzle:
 
-```
-spago run
+```sh
+spago run --node-args '--day $DAY --part $PART --input $PATH_TO_INPUT_FILE'
 ```

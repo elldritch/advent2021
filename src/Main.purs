@@ -3,27 +3,36 @@ module Main
   ) where
 
 import Prelude
-import Advent2021.D1 (part1)
+import Advent2021.Puzzles.D1 as D1
+import Advent2021.Runners (runInts)
 import Effect (Effect)
-import Effect.Console (log)
-import Node.Encoding (Encoding(..))
-import Node.FS.Sync (readTextFile)
-import Data.Array.NonEmpty (fromArray)
-import Data.Array.Partial (init)
-import Data.Int (fromString)
-import Data.Maybe (fromJust)
-import Data.String (Pattern(..), split)
-import Partial.Unsafe (unsafePartial)
+import Effect.Exception (throw)
+import Node.Path (FilePath)
+import Options.Applicative (header, (<**>))
+import Options.Applicative.Builder (fullDesc, info, int, long, option, strOption)
+import Options.Applicative.Extra (execParser, helper)
+import Options.Applicative.Types (Parser, ParserInfo)
+
+data Options
+  = Options
+    { day :: Int
+    , part :: Int
+    , inputFile :: FilePath
+    }
+
+optsParser :: Parser Options
+optsParser = ado
+  day <- option int (long "day")
+  part <- option int (long "part")
+  inputFile <- strOption (long "input")
+  in Options { day, part, inputFile }
+
+argparse :: ParserInfo Options
+argparse = info (optsParser <**> helper) (fullDesc <> header "Advent of Code 2021 solver")
 
 main :: Effect Unit
 main = do
-  contents <- readTextFile UTF8 "./inputs/1/1"
-  let
-    depths =
-      unsafePartial
-        $ fromJust
-        $ fromArray
-        $ map (fromJust <<< fromString)
-        $ init
-        $ split (Pattern "\n") contents
-  log $ show $ part1 depths
+  Options { day, part, inputFile } <- execParser argparse
+  case { day, part } of
+    { day: 1, part: 1 } -> runInts inputFile D1.part1
+    _ -> throw "Invalid puzzle day or part specified"

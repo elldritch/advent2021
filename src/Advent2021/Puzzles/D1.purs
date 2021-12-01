@@ -1,4 +1,4 @@
-module Advent2021.D1
+module Advent2021.Puzzles.D1
   ( part1
   ) where
 
