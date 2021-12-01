@@ -3,13 +3,12 @@ module Advent2021.Runners
   ) where
 
 import Prelude
-import Data.Array.NonEmpty.Internal (NonEmptyArray)
 import Effect (Effect)
+import Effect.Console (log)
 import Node.Encoding (Encoding(..))
 import Node.FS.Sync (readTextFile)
 import Node.Path (FilePath)
-import Effect.Console (log)
-import Data.Array.NonEmpty (fromArray)
+import Data.Array.NonEmpty (fromArray, NonEmptyArray)
 import Data.Array.Partial (init)
 import Data.Int (fromString)
 import Data.Maybe (fromJust)
