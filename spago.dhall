@@ -21,6 +21,7 @@
   , "spec"
   , "string-parsers"
   , "strings"
+  , "transformers"
   , "tuples"
   , "unsafe-coerce"
   ]

@@ -39,4 +39,5 @@ main = do
     { day: 1, part: 1 } -> runInts inputFile D1.part1
     { day: 1, part: 2 } -> runInts inputFile D1.part2
     { day: 2, part: 1 } -> run inputFile D2.part1
+    { day: 2, part: 2 } -> run inputFile D2.part2
     _ -> throw "Invalid puzzle day or part specified"
