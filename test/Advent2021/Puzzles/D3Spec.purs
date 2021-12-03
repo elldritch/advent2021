@@ -26,6 +26,8 @@ input =
 
 spec :: Spec Unit
 spec =
-  describe "Day 2" do
+  describe "Day 3" do
     it "computes power consumption" do
       D3.part1 input `shouldParseTo` 198
+    it "verifies life support rating" do
+      D3.part2 input `shouldParseTo` 230

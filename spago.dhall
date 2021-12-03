@@ -4,6 +4,7 @@
   , "arrays"
   , "console"
   , "control"
+  , "debug"
   , "effect"
   , "either"
   , "exceptions"

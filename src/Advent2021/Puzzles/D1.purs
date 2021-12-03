@@ -23,6 +23,7 @@ part1 input = increases
 
   { increases } = foldl countIncreases { last: head input, increases: 0 } input
 
+-- TODO: refactor into `-> Either String Int` to remove unsafe usage
 part2 :: NonEmptyArray Int -> Int
 part2 input = part1 windows
   where
