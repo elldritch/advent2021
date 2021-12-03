@@ -5,6 +5,7 @@ module Test.Main
 import Prelude
 import Advent2021.Puzzles.D1Spec as D1Spec
 import Advent2021.Puzzles.D2Spec as D2Spec
+import Advent2021.Puzzles.D3Spec as D3Spec
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Test.Spec.Reporter (consoleReporter)
@@ -16,3 +17,4 @@ main =
     $ runSpec [ consoleReporter ] do
         D1Spec.spec
         D2Spec.spec
+        D3Spec.spec

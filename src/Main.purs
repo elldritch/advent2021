@@ -3,9 +3,9 @@ module Main
   ) where
 
 import Prelude
-
 import Advent2021.Puzzles.D1 as D1
 import Advent2021.Puzzles.D2 as D2
+import Advent2021.Puzzles.D3 as D3
 import Advent2021.Runners (run, runInts)
 import Effect (Effect)
 import Effect.Exception (throw)
@@ -40,4 +40,5 @@ main = do
     { day: 1, part: 2 } -> runInts inputFile D1.part2
     { day: 2, part: 1 } -> run inputFile D2.part1
     { day: 2, part: 2 } -> run inputFile D2.part2
+    { day: 3, part: 1 } -> run inputFile D3.part1
     _ -> throw "Invalid puzzle day or part specified"
