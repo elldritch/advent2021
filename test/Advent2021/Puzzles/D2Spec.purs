@@ -2,7 +2,7 @@ module Advent2021.Puzzles.D2Spec (spec) where
 
 import Prelude
 import Advent2021.Puzzles.D2 as D2
-import Advent2021.Spec.Parsers (shouldParseTo)
+import Advent2021.Spec.Assertions (shouldParseTo)
 import Data.String (joinWith)
 import Test.Spec (Spec, describe, it)
 

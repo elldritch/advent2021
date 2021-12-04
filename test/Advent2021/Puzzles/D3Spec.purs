@@ -2,7 +2,7 @@ module Advent2021.Puzzles.D3Spec (spec) where
 
 import Prelude
 import Advent2021.Puzzles.D3 as D3
-import Advent2021.Spec.Parsers (shouldParseTo)
+import Advent2021.Spec.Assertions (shouldSucceed)
 import Data.String (joinWith)
 import Test.Spec (Spec, describe, it)
 
@@ -28,6 +28,6 @@ spec :: Spec Unit
 spec =
   describe "Day 3" do
     it "computes power consumption" do
-      D3.part1 input `shouldParseTo` 198
+      D3.part1 input `shouldSucceed` 198
     it "verifies life support rating" do
-      D3.part2 input `shouldParseTo` 230
+      D3.part2 input `shouldSucceed` 230
