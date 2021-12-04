@@ -1,10 +1,12 @@
 module Advent2021.Puzzles.D1Spec (spec) where
 
 import Prelude
+
+import Advent2021.Puzzles.D1 as D1
+import Advent2021.Spec.Assertions (shouldSucceed)
 import Data.Array.NonEmpty (NonEmptyArray, cons')
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
-import Advent2021.Puzzles.D1 as D1
 
 input :: NonEmptyArray Int
 input =
@@ -27,4 +29,4 @@ spec =
     it "checks depth increases" do
       D1.part1 input `shouldEqual` 7
     it "checks depth increases with sliding window" do
-      D1.part2 input `shouldEqual` 5
+      D1.part2 input `shouldSucceed` 5

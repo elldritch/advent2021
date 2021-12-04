@@ -4,13 +4,12 @@ module Advent2021.Puzzles.D1
   ) where
 
 import Prelude
-import Data.Array (zip)
+import Data.Array (tail, zip)
 import Data.Array.NonEmpty (NonEmptyArray, fromArray, head, toArray)
-import Data.Array.Partial (tail)
+import Data.Array.NonEmpty as NE
+import Data.Either (Either, note)
 import Data.Foldable (foldl)
-import Data.Maybe (fromJust)
 import Data.Tuple (Tuple(..))
-import Partial.Unsafe (unsafePartial)
 
 part1 :: NonEmptyArray Int -> Int
 part1 input = increases
@@ -23,16 +22,12 @@ part1 input = increases
 
   { increases } = foldl countIncreases { last: head input, increases: 0 } input
 
--- TODO: refactor into `-> Either String Int` to remove unsafe usage
-part2 :: NonEmptyArray Int -> Int
-part2 input = part1 windows
+part2 :: NonEmptyArray Int -> Either String Int
+part2 input = do
+  let
+    input2 = NE.tail input
+  input3 <- note "Invalid input: report must have at least 3 measurements" $ tail input2
+  windowTuples <- note "Impossible: no window measurements" $ fromArray $ zip input3 $ zip input2 $ toArray input
+  pure $ part1 $ map sumTuple windowTuples
   where
-  input2 = unsafePartial tail $ toArray input
-
-  input3 = unsafePartial tail input2
-
-  windowTuples = unsafePartial $ fromJust $ fromArray $ zip input3 $ zip input2 $ toArray input
-
   sumTuple (Tuple a (Tuple b c)) = a + b + c
-
-  windows = map sumTuple windowTuples
