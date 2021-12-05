@@ -25,6 +25,7 @@
   , "strings"
   , "transformers"
   , "tuples"
+  , "unfoldable"
   , "unsafe-coerce"
   ]
 , packages = ./packages.dhall

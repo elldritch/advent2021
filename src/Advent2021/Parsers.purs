@@ -2,11 +2,13 @@ module Advent2021.Parsers
   ( integer
   , newline
   , runParser
+  , space
   , token
   , word
   ) where
 
 import Prelude
+import Control.Alternative ((<|>))
 import Data.Array (fromFoldable)
 import Data.Bifunctor (lmap)
 import Data.Either (Either)
@@ -15,14 +17,17 @@ import Data.Maybe (Maybe(..))
 import Data.String.CodeUnits (fromCharArray)
 import Text.Parsing.StringParser (Parser, fail, printParserError)
 import Text.Parsing.StringParser as StringParser
-import Text.Parsing.StringParser.CodePoints (anyDigit, char, string, whiteSpace)
+import Text.Parsing.StringParser.CodePoints (anyDigit, char, string)
 import Text.Parsing.StringParser.Combinators (many)
 
 runParser :: forall a. Parser a -> String -> Either String a
 runParser a b = lmap printParserError $ StringParser.runParser a b
 
+space :: Parser String
+space = fromCharArray <<< fromFoldable <$> many (char ' ' <|> char '\t')
+
 token :: forall a. Parser a -> Parser a
-token p = p <* whiteSpace
+token p = p <* space
 
 word :: String -> Parser String
 word s = token $ string s
