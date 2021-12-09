@@ -13,7 +13,6 @@ import Data.Map (empty, size)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Ord (abs)
-import Data.Sequence.Ordered as OrdSeq
 import Data.Show.Generic (genericShow)
 import Data.Traversable (sequence)
 import Data.Tuple (uncurry)
@@ -65,7 +64,7 @@ countOverlapPoints :: List Line -> Either String Int
 countOverlapPoints lines = do
   ps <- map concat $ note "Invalid input: line is not vertical, horizontal, or diagonal" $ sequence $ points <$> lines
   let
-    counts = foldl (\m p -> Map.insertWith (+) p 1 m) empty $ OrdSeq.fromFoldable ps
+    counts = foldl (\m p -> Map.insertWith (+) p 1 m) empty ps
   pure $ size $ Map.filter (_ > 1) counts
 
 inputP :: Parser (List Line)
