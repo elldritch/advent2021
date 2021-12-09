@@ -1,18 +1,22 @@
 module Advent2021.Puzzles.D4
   ( part1
+  , part2
   ) where
 
 import Prelude
 import Advent2021.Parsers (integer, newline, runParser, space)
 import Data.Either (Either, note)
 import Data.Foldable (any, find, foldl, or, sum)
-import Data.List (concat, difference, head, null, transpose, (:))
-import Data.List.Types (List, NonEmptyList)
+import Data.List (concat, head, null, transpose, (:))
+import Data.List as List
+import Data.List.Types (List)
 import Data.Maybe (Maybe(..))
+import Data.Set (Set)
+import Data.Set as Set
 import Data.Unfoldable (replicateA)
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (char, eof)
-import Text.Parsing.StringParser.Combinators (sepBy, sepBy1)
+import Text.Parsing.StringParser.Combinators (sepBy)
 
 type Board
   = List (List Int)
@@ -39,20 +43,23 @@ won :: Board -> Draws -> Boolean
 won board draws = or $ map (\f -> any lineWon (f board)) [ rows, cols ]
   where
   lineWon :: Line -> Boolean
-  lineWon line = null $ difference line draws
+  lineWon line = null $ List.difference line draws
 
-part1 :: String -> Either String Int
-part1 input = do
+type Result
+  = { winner :: Board, drawn :: Draws }
+
+runner :: forall r. (List Board -> Draws -> { result :: Maybe Result | r }) -> String -> Either String Int
+runner getWinner input = do
   { draws, boards } <- runParser inputP input
   let
-    { drawn, winner } = foldl (findWinner boards) { drawn: mempty, winner: Nothing } draws
-  winnerBoard <- note "Invalid input: no winning board" winner
-  computeScore winnerBoard drawn
+    { result } = getWinner boards draws
+  { winner, drawn } <- note "Invalid input: no winning board" result
+  computeScore winner drawn
   where
-  drawsP :: Parser (NonEmptyList Int)
-  drawsP = (sepBy1 integer (char ',')) <* newline
+  drawsP :: Parser Draws
+  drawsP = (sepBy integer (char ',')) <* newline
 
-  inputP :: Parser { draws :: NonEmptyList Int, boards :: List Board }
+  inputP :: Parser { draws :: Draws, boards :: List Board }
   inputP = do
     draws <- drawsP
     newline
@@ -60,22 +67,51 @@ part1 input = do
     eof
     pure $ { draws, boards }
 
+  computeScore :: Board -> Draws -> Either String Int
+  computeScore board draws = do
+    winningDraw <- note "Impossible: no numbers were drawn" $ head draws
+    pure $ winningDraw * sum (List.difference (concat board) draws)
+
+part1 :: String -> Either String Int
+part1 = runner $ \boards -> foldl (findWinner boards) { drawn: mempty, result: Nothing }
+  where
   findWinner ::
     List Board ->
-    { drawn :: List Int, winner :: Maybe Board } ->
+    { drawn :: Draws, result :: Maybe Result } ->
     Int ->
-    { drawn :: List Int, winner :: Maybe Board }
-  findWinner boards { drawn, winner } draw = case winner of
-    Just _ -> { drawn, winner }
+    { drawn :: Draws, result :: Maybe Result }
+  findWinner boards { drawn, result } draw = case result of
+    Just _ -> { drawn, result }
     Nothing ->
       let
         drawn' = draw : drawn
       in
         { drawn: drawn'
-        , winner: find (flip won drawn') boards
+        , result: find (flip won drawn') boards >>= pure <$> { winner: _, drawn: drawn' }
         }
 
-  computeScore :: Board -> Draws -> Either String Int
-  computeScore board draws = do
-    winningDraw <- note "Impossible: no numbers were drawn" $ head draws
-    pure $ winningDraw * sum (difference (concat board) draws)
+part2 :: String -> Either String Int
+part2 =
+  runner
+    $ \boards ->
+        foldl findWinner
+          { drawn: mempty
+          , result: Nothing
+          , remaining: Set.fromFoldable boards
+          }
+  where
+  findWinner ::
+    { drawn :: Draws, remaining :: Set Board, result :: Maybe Result } ->
+    Int ->
+    { drawn :: Draws, remaining :: Set Board, result :: Maybe Result }
+  findWinner { drawn, result, remaining } draw = case head $ Set.toUnfoldable winners of
+    Just w ->
+      { drawn: drawn'
+      , remaining: Set.difference remaining winners
+      , result: Just { winner: w, drawn: drawn' }
+      }
+    Nothing -> { drawn: drawn', remaining, result }
+    where
+    drawn' = draw : drawn
+
+    winners = Set.filter (flip won drawn') remaining

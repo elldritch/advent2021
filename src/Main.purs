@@ -44,4 +44,5 @@ main = do
     { day: 3, part: 1 } -> run inputFile D3.part1
     { day: 3, part: 2 } -> run inputFile D3.part2
     { day: 4, part: 1 } -> run inputFile D4.part1
+    { day: 4, part: 2 } -> run inputFile D4.part2
     _ -> throw "Invalid puzzle day or part specified"

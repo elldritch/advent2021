@@ -17,6 +17,7 @@
   , "node-fs"
   , "node-path"
   , "optparse"
+  , "ordered-collections"
   , "partial"
   , "prelude"
   , "psci-support"

@@ -30,5 +30,8 @@ input = """7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,
 spec :: Spec Unit
 spec =
   describe "Day 4" do
-    it "finds winning bingo boards" do
+    it "finds the bingo board that wins first" do
       D4.part1 input `shouldSucceed` 4512
+
+    it "finds the bingo board that wins last" do
+      D4.part2 input `shouldSucceed` 1924
