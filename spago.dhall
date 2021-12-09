@@ -21,6 +21,7 @@
   , "partial"
   , "prelude"
   , "psci-support"
+  , "sequences"
   , "spec"
   , "string-parsers"
   , "strings"

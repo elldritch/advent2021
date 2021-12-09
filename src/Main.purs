@@ -7,6 +7,7 @@ import Advent2021.Puzzles.D1 as D1
 import Advent2021.Puzzles.D2 as D2
 import Advent2021.Puzzles.D3 as D3
 import Advent2021.Puzzles.D4 as D4
+import Advent2021.Puzzles.D5 as D5
 import Advent2021.Runners (run, runInts)
 import Effect (Effect)
 import Effect.Exception (throw)
@@ -45,4 +46,5 @@ main = do
     { day: 3, part: 2 } -> run inputFile D3.part2
     { day: 4, part: 1 } -> run inputFile D4.part1
     { day: 4, part: 2 } -> run inputFile D4.part2
+    { day: 5, part: 1 } -> run inputFile D5.part1
     _ -> throw "Invalid puzzle day or part specified"
