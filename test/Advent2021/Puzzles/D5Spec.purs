@@ -23,3 +23,5 @@ spec =
   describe "Day 5" do
     it "counts points with multiple hydrothermal lines" do
       D5.part1 input `shouldSucceed` 5
+    it "includes diagonal hydrothermal lines" do
+      D5.part2 input `shouldSucceed` 12

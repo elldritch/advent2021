@@ -1,19 +1,22 @@
 module Advent2021.Puzzles.D5
   ( part1
+  , part2
   ) where
 
 import Prelude
 import Advent2021.Parsers (integer, newline, runParser)
 import Data.Either (Either, note)
 import Data.Generic.Rep (class Generic)
-import Data.List (List, concat, foldl, range)
+import Data.List (List, concat, foldl, range, zip)
 import Data.List as List
 import Data.Map (empty, size)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
+import Data.Ord (abs)
 import Data.Sequence.Ordered as OrdSeq
 import Data.Show.Generic (genericShow)
 import Data.Traversable (sequence)
+import Data.Tuple (uncurry)
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (char, eof, string)
 import Text.Parsing.StringParser.Combinators (sepEndBy)
@@ -53,16 +56,23 @@ points (Line (Point x1 y1) (Point x2 y2)) =
     Just $ Point x1 <$> range y1 y2
   else if y1 == y2 then
     Just $ (\x -> Point x y1) <$> range x1 x2
+  else if abs (x1 - x2) == abs (y1 - y2) then
+    Just $ uncurry Point <$> zip (range x1 x2) (range y1 y2)
   else
     Nothing
 
-part1 :: String -> Either String Int
-part1 input = do
-  lines <- List.filter axisAligned <$> runParser inputP input
-  ps <- map concat $ note "Impossible: line was not axis-aligned" $ sequence $ points <$> lines
+countOverlapPoints :: List Line -> Either String Int
+countOverlapPoints lines = do
+  ps <- map concat $ note "Invalid input: line is not vertical, horizontal, or diagonal" $ sequence $ points <$> lines
   let
     counts = foldl (\m p -> Map.insertWith (+) p 1 m) empty $ OrdSeq.fromFoldable ps
   pure $ size $ Map.filter (_ > 1) counts
-  where
-  inputP :: Parser (List Line)
-  inputP = sepEndBy lineP newline <* eof
+
+inputP :: Parser (List Line)
+inputP = sepEndBy lineP newline <* eof
+
+part1 :: String -> Either String Int
+part1 input = countOverlapPoints =<< List.filter axisAligned <$> runParser inputP input
+
+part2 :: String -> Either String Int
+part2 input = runParser inputP input >>= countOverlapPoints
