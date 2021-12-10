@@ -4,30 +4,47 @@ module Advent2021.Puzzles.D1
   ) where
 
 import Prelude
-import Data.Array (tail, zip)
-import Data.Array.NonEmpty (NonEmptyArray, fromArray, head, toArray)
-import Data.Array.NonEmpty as NE
+import Advent2021.Parsers (integer, newline, runParser)
 import Data.Either (Either, note)
-import Data.Foldable (foldl)
+import Data.Foldable (class Foldable, foldl)
+import Data.List (List, tail, zip)
+import Data.List.NonEmpty (head)
+import Data.List.NonEmpty as NEList
+import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
+import Text.Parsing.StringParser (Parser)
+import Text.Parsing.StringParser.Combinators (sepEndBy)
 
-part1 :: NonEmptyArray Int -> Int
-part1 input = increases
+run :: (List Int -> Either String Int) -> String -> Either String Int
+run count input = do
+  xs <- runParser inputP input
+  count xs
   where
-  countIncreases :: { last :: Int, increases :: Int } -> Int -> { last :: Int, increases :: Int }
-  countIncreases { last, increases } curr =
+  inputP :: Parser (List Int)
+  inputP = sepEndBy integer newline
+
+countIncreases :: forall f a. Foldable f => Ord a => f a -> Int
+countIncreases xs = case NEList.fromFoldable xs of
+  Just xs' -> _.increases $ foldl f { last: head xs', increases: 0 } xs'
+  Nothing -> 0
+  where
+  f :: { last :: a, increases :: Int } -> a -> { last :: a, increases :: Int }
+  f { last, increases } curr =
     { last: curr
     , increases: increases + if curr > last then 1 else 0
     }
 
-  { increases } = foldl countIncreases { last: head input, increases: 0 } input
+part1 :: String -> Either String Int
+part1 = run $ \input -> pure $ countIncreases input
 
-part2 :: NonEmptyArray Int -> Either String Int
-part2 input = do
-  let
-    input2 = NE.tail input
-  input3 <- note "Invalid input: report must have at least 3 measurements" $ tail input2
-  windowTuples <- note "Impossible: no window measurements" $ fromArray $ zip input3 $ zip input2 $ toArray input
-  pure $ part1 $ map sumTuple windowTuples
+part2 :: String -> Either String Int
+part2 =
+  run
+    $ \input -> do
+        input2 <- note "Invalid input: report must have at least 3 measurements" $ tail input
+        input3 <- note "Invalid input: report must have at least 3 measurements" $ tail input2
+        let
+          windowTuples = zip input3 $ zip input2 $ input
+        pure $ countIncreases $ map sumTuple windowTuples
   where
   sumTuple (Tuple a (Tuple b c)) = a + b + c

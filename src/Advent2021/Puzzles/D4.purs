@@ -48,8 +48,8 @@ won board draws = or $ map (\f -> any lineWon (f board)) [ rows, cols ]
 type Result
   = { winner :: Board, drawn :: Draws }
 
-runner :: forall r. (List Board -> Draws -> { result :: Maybe Result | r }) -> String -> Either String Int
-runner getWinner input = do
+run :: forall r. (List Board -> Draws -> { result :: Maybe Result | r }) -> String -> Either String Int
+run getWinner input = do
   { draws, boards } <- runParser inputP input
   let
     { result } = getWinner boards draws
@@ -73,7 +73,7 @@ runner getWinner input = do
     pure $ winningDraw * sum (List.difference (concat board) draws)
 
 part1 :: String -> Either String Int
-part1 = runner $ \boards -> foldl (findWinner boards) { drawn: mempty, result: Nothing }
+part1 = run $ \boards -> foldl (findWinner boards) { drawn: mempty, result: Nothing }
   where
   findWinner ::
     List Board ->
@@ -92,7 +92,7 @@ part1 = runner $ \boards -> foldl (findWinner boards) { drawn: mempty, result: N
 
 part2 :: String -> Either String Int
 part2 =
-  runner
+  run
     $ \boards ->
         foldl findWinner
           { drawn: mempty

@@ -6,7 +6,8 @@ import Advent2021.Spec.Assertions (shouldSucceed)
 import Test.Spec (Spec, describe, it)
 
 input :: String
-input = """0,9 -> 5,9
+input =
+  """0,9 -> 5,9
 8,0 -> 0,8
 9,4 -> 3,4
 2,2 -> 2,1
