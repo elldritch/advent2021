@@ -23,3 +23,5 @@ spec =
   describe "Day 8" do
     it "counts appearances of of 1, 4, 7, and 8 in the output values" do
       D8.part1 input `shouldSucceed` 26
+    it "deciphers output values" do
+      D8.part2 input `shouldSucceed` 61229
