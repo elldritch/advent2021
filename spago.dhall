@@ -3,6 +3,7 @@
   [ "aff"
   , "arrays"
   , "bifunctors"
+  , "bigints"
   , "console"
   , "control"
   , "debug"
