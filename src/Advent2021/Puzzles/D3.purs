@@ -6,19 +6,15 @@ module Advent2021.Puzzles.D3
 import Prelude
 import Advent2021.Parsers (newline, runParser)
 import Control.Alternative ((<|>))
-import Data.Array (fromFoldable, unsafeIndex, zip)
-import Data.Array.NonEmpty (filter, fromArray, fromFoldable1, head)
-import Data.Array.NonEmpty as NE
-import Data.Array.NonEmpty.Internal (NonEmptyArray)
-import Data.Either (Either)
+import Data.Either (Either, note)
 import Data.Foldable (foldl, foldr, product)
 import Data.Int (pow)
-import Data.Maybe (fromJust)
+import Data.List.NonEmpty (NonEmptyList, filterM, head, index, length, zip)
+import Data.List.NonEmpty as NEList
 import Data.Tuple (Tuple(..), fst, uncurry)
-import Partial.Unsafe (unsafePartial)
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (char, eof)
-import Text.Parsing.StringParser.Combinators (many, many1)
+import Text.Parsing.StringParser.Combinators (many1)
 
 newtype Bit
   = Bit Boolean
@@ -35,10 +31,10 @@ bitP :: Parser Bit
 bitP = (char '1' *> pure (Bit true)) <|> (char '0' *> pure (Bit false))
 
 type BitString
-  = Array Bit
+  = NonEmptyList Bit
 
 bitstringP :: Parser BitString
-bitstringP = fromFoldable <$> many bitP
+bitstringP = many1 bitP
 
 toInt :: BitString -> Int
 toInt bits =
@@ -52,9 +48,9 @@ type BitCounts
   = { ones :: Int, zeros :: Int }
 
 type BitStringCounts
-  = Array BitCounts
+  = NonEmptyList BitCounts
 
-countBitOccurrences :: NonEmptyArray BitString -> BitStringCounts
+countBitOccurrences :: NonEmptyList BitString -> BitStringCounts
 countBitOccurrences bitstrings = foldl countBitString zeroCounts bitstrings
   where
   zeroCounts :: BitStringCounts
@@ -74,18 +70,17 @@ countBitOccurrences bitstrings = foldl countBitString zeroCounts bitstrings
 
   bitToCounts (Bit false) = { ones: 0, zeros: 1 }
 
-run :: (NonEmptyArray BitString -> Either String Int) -> String -> Either String Int
+run :: (NonEmptyList BitString -> Either String Int) -> String -> Either String Int
 run solver input = runParser inputP input >>= solver
   where
-  inputP :: Parser (NonEmptyArray BitString)
-  inputP = fromFoldable1 <$> many1 (bitstringP <* newline) <* eof
+  inputP :: Parser (NonEmptyList BitString)
+  inputP = many1 (bitstringP <* newline) <* eof
 
 part1 :: String -> Either String Int
 part1 =
-  run
-    $ \bitstrings ->
-        pure $ product
-          $ map (\f -> toInt $ f $ countBitOccurrences bitstrings) [ epsilonBitString, gammaBitString ]
+  run \bitstrings ->
+    pure $ product
+      $ map (\f -> toInt $ f $ countBitOccurrences bitstrings) [ epsilonBitString, gammaBitString ]
   where
   gammaBitString :: BitStringCounts -> BitString
   gammaBitString = map (\{ ones, zeros } -> if ones > zeros then (Bit true) else (Bit false))
@@ -95,67 +90,50 @@ part1 =
 
 part2 :: String -> Either String Int
 part2 =
-  run
-    $ \bitstrings -> do
-        o <- oxygenGeneratorRating bitstrings
-        c <- co2ScrubberRating bitstrings
-        pure $ toInt o * toInt c
+  run \bitstrings -> do
+    o <- oxygenGeneratorRating bitstrings
+    c <- co2ScrubberRating bitstrings
+    pure $ toInt o * toInt c
   where
   findRating ::
-    (NonEmptyArray BitString -> Int -> Either String (NonEmptyArray BitString)) ->
-    NonEmptyArray BitString ->
+    (NonEmptyList BitString -> Int -> Either String (NonEmptyList BitString)) ->
+    NonEmptyList BitString ->
     Either String BitString
   findRating pick bitstrings = head <$> findRatingRecurse pick 0 bitstrings
 
   -- Is there a combinator for this?
   findRatingRecurse ::
-    (NonEmptyArray BitString -> Int -> Either String (NonEmptyArray BitString)) ->
+    (NonEmptyList BitString -> Int -> Either String (NonEmptyList BitString)) ->
     Int ->
-    NonEmptyArray BitString ->
-    Either String (NonEmptyArray BitString)
+    NonEmptyList BitString ->
+    Either String (NonEmptyList BitString)
   findRatingRecurse pick i bitstrings = do
     next <- pick bitstrings i
-    if NE.length next == 1 then pure next else findRatingRecurse pick (i + 1) next
+    if length next == 1 then pure next else findRatingRecurse pick (i + 1) next
 
-  -- TODO: how do I get rid of unsafes here?
-  -- Maybe do an unfold and pick the last one to avoid unsafe indexing?
-  oxygenGeneratorRating :: NonEmptyArray BitString -> Either String BitString
+  pickByBit :: (BitCounts -> Bit) -> NonEmptyList BitString -> Either String BitString
+  pickByBit pickBit =
+    findRating \bitstrings i -> do
+      counts <- note "Impossible: bitstring index has no corresponding count" $ index (countBitOccurrences bitstrings) i
+      passed <-
+        filterM
+          ( \bitstring -> do
+              bit <- note "Impossible: bitstring index out of bounds" $ index bitstring i
+              pure $ bit == pickBit counts
+          )
+          bitstrings
+      note "Impossible: no bitstring selected" $ NEList.fromList passed
+
+  oxygenGeneratorRating :: NonEmptyList BitString -> Either String BitString
   oxygenGeneratorRating =
-    findRating
-      $ \bitstrings i ->
-          unsafePartial $ pure
-            $ let
-                -- Maybe I can avoid this one by just counting the single column of bits?
-                { zeros, ones } = unsafeIndex (countBitOccurrences bitstrings) i
-              in
-                -- How do I avoid this one?
-                fromJust $ fromArray
-                  $ filter
-                      ( \bitstring ->
-                          -- How do I avoid this one?
-                          unsafeIndex bitstring i
-                            == case compare zeros ones of
-                                EQ -> _1
-                                LT -> _1
-                                GT -> _0
-                      )
-                      bitstrings
+    pickByBit \{ zeros, ones } -> case compare zeros ones of
+      EQ -> _1
+      LT -> _1
+      GT -> _0
 
-  co2ScrubberRating :: NonEmptyArray BitString -> Either String BitString
+  co2ScrubberRating :: NonEmptyList BitString -> Either String BitString
   co2ScrubberRating =
-    findRating
-      $ \bitstrings i ->
-          unsafePartial $ pure
-            $ let
-                { zeros, ones } = unsafeIndex (countBitOccurrences bitstrings) i
-              in
-                fromJust $ fromArray
-                  $ filter
-                      ( \bitstring ->
-                          unsafeIndex bitstring i
-                            == case compare zeros ones of
-                                EQ -> _0
-                                LT -> _0
-                                GT -> _1
-                      )
-                      bitstrings
+    pickByBit \{ zeros, ones } -> case compare zeros ones of
+      EQ -> _0
+      LT -> _0
+      GT -> _1

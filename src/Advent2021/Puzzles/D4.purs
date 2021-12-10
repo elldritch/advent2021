@@ -92,13 +92,12 @@ part1 = run $ \boards -> foldl (findWinner boards) { drawn: mempty, result: Noth
 
 part2 :: String -> Either String Int
 part2 =
-  run
-    $ \boards ->
-        foldl findWinner
-          { drawn: mempty
-          , result: Nothing
-          , remaining: Set.fromFoldable boards
-          }
+  run \boards ->
+    foldl findWinner
+      { drawn: mempty
+      , result: Nothing
+      , remaining: Set.fromFoldable boards
+      }
   where
   findWinner ::
     { drawn :: Draws, remaining :: Set Board, result :: Maybe Result } ->
