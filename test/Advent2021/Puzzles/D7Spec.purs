@@ -11,5 +11,7 @@ input = "16,1,2,0,4,2,7,1,2,14\n"
 spec :: Spec Unit
 spec =
   describe "Day 7" do
-    it "calculates minimum fuel needs" do
+    it "calculates minimum fuel needs at constant burn rate" do
       D7.part1 input `shouldSucceed` 37
+    it "calculates minimum fuel needs for non-linear burns" do
+      D7.part2 input `shouldSucceed` 168
