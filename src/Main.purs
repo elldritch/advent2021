@@ -10,6 +10,7 @@ import Advent2021.Puzzles.D4 as D4
 import Advent2021.Puzzles.D5 as D5
 import Advent2021.Puzzles.D6 as D6
 import Advent2021.Puzzles.D7 as D7
+import Advent2021.Puzzles.D8 as D8
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Exception (throw)
@@ -56,6 +57,7 @@ main = do
     { day: 6, part: 2 } -> run inputFile D6.part2
     { day: 7, part: 1 } -> run inputFile D7.part1
     { day: 7, part: 2 } -> run inputFile D7.part2
+    { day: 8, part: 1 } -> run inputFile D8.part1
     _ -> throw "Invalid puzzle day or part specified"
 
 run :: forall a. Show a => FilePath -> (String -> a) -> Effect Unit
