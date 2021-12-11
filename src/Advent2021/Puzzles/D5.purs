@@ -6,8 +6,9 @@ module Advent2021.Puzzles.D5
 import Prelude
 import Advent2021.Parsers (integer, newline, runParser)
 import Data.Either (Either, note)
+import Data.Foldable (foldl)
 import Data.Generic.Rep (class Generic)
-import Data.List (List, concat, foldl, range, zip)
+import Data.List (List, concat, range, zip)
 import Data.List as List
 import Data.Map (empty, size)
 import Data.Map as Map

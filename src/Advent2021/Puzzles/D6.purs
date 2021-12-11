@@ -7,8 +7,8 @@ import Prelude
 import Advent2021.Parsers (integer, newline, runParser)
 import Data.BigInt (BigInt, fromInt, toString)
 import Data.Either (Either, note)
-import Data.Foldable (sum)
-import Data.List (List, foldl, range)
+import Data.Foldable (sum, foldl)
+import Data.List (List, range)
 import Data.List.Lazy (drop, head, iterate)
 import Data.Map (Map, values)
 import Data.Map as Map
