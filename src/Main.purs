@@ -12,12 +12,14 @@ import Advent2021.Puzzles.D6 as D6
 import Advent2021.Puzzles.D7 as D7
 import Advent2021.Puzzles.D8 as D8
 import Advent2021.Puzzles.D9 as D9
+import Data.Either (Either(..))
 import Effect (Effect)
-import Effect.Console (log)
-import Effect.Exception (throw)
+import Effect.Console (log, warn)
+import Effect.Exception (catchException, message, throw)
 import Node.Encoding (Encoding(..))
 import Node.FS.Sync (readTextFile)
 import Node.Path (FilePath)
+import Node.Process (exit)
 import Options.Applicative (header, (<**>))
 import Options.Applicative.Builder (fullDesc, info, int, long, option, strOption)
 import Options.Applicative.Extra (execParser, helper)
@@ -63,11 +65,12 @@ main = do
     { day: 9, part: 1 } -> run inputFile D9.part1
     _ -> throw "Invalid puzzle day or part specified"
 
-run :: forall a. Show a => FilePath -> (String -> a) -> Effect Unit
-run = withInputFile pure
-
-withInputFile :: forall a b. Show b => (String -> Effect a) -> FilePath -> (a -> b) -> Effect Unit
-withInputFile prepare inputFilePath solver = do
-  contents <- readTextFile UTF8 inputFilePath
-  input <- prepare contents
-  log $ show $ solver input
+run :: forall a. Show a => FilePath -> (String -> Either String a) -> Effect Unit
+run inputFilePath solver =
+  catchException handler do
+    input <- readTextFile UTF8 inputFilePath
+    case solver input of
+      Right a -> log $ show a
+      Left err -> warn ("Could not find solution: " <> err) *> exit 1
+  where
+  handler err = warn ("An exception occurred: " <> message err) *> exit 1

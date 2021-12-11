@@ -17,6 +17,7 @@
   , "node-buffer"
   , "node-fs"
   , "node-path"
+  , "node-process"
   , "optparse"
   , "ordered-collections"
   , "prelude"
