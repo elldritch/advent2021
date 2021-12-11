@@ -17,5 +17,7 @@ input =
 spec :: Spec Unit
 spec =
   describe "Day 9" do
-    it "sums risk levels of low points" do
+    it "finds low points" do
       D9.part1 input `shouldSucceed` 15
+    it "finds basins" do
+      D9.part2 input `shouldSucceed` 1134
