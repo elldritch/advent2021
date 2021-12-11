@@ -83,12 +83,11 @@ part1 = run $ \boards -> foldl (findWinner boards) { drawn: mempty, result: Noth
   findWinner boards { drawn, result } draw = case result of
     Just _ -> { drawn, result }
     Nothing ->
-      let
-        drawn' = draw : drawn
-      in
-        { drawn: drawn'
-        , result: find (flip won drawn') boards >>= pure <$> { winner: _, drawn: drawn' }
-        }
+      { drawn: drawn'
+      , result: find (flip won drawn') boards >>= pure <$> { winner: _, drawn: drawn' }
+      }
+      where
+      drawn' = draw : drawn
 
 part2 :: String -> Either String Int
 part2 =
