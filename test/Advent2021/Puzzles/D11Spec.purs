@@ -24,3 +24,5 @@ spec =
   describe "Day 11" do
     it "counts dumbo flashes" do
       D11.part1 input `shouldSucceed` 1656
+    it "finds flash synchronizations" do
+      D11.part2 input `shouldSucceed` 195

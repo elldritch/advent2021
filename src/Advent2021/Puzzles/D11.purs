@@ -8,23 +8,23 @@ import Advent2021.Grid (Grid, around, gridP, insertWith)
 import Advent2021.Grid as Grid
 import Advent2021.Helpers (fix)
 import Advent2021.Parsers (runParser)
-import Data.Either (Either)
-import Data.Foldable (foldl)
+import Data.Either (Either, note)
+import Data.Foldable (all, foldl)
 import Data.FunctorWithIndex (mapWithIndex)
-import Data.List (concat)
+import Data.List (List, concat)
 import Data.List as List
 import Data.List.Lazy (iterate)
 import Data.List.Lazy as ListL
 import Data.Set as Set
-import Data.Tuple (Tuple(..), fst)
+import Data.Tuple (Tuple(..), fst, snd)
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (eof)
 
-type Octopus
+type Energy
   = Int
 
 type Octopuses
-  = Grid Octopus
+  = Grid Energy
 
 octopusesP :: Parser Octopuses
 octopusesP = gridP identity <* eof
@@ -66,4 +66,9 @@ part1 input = do
   countFlashes = foldl (\count energy -> count + if energy == 0 then 1 else 0) 0
 
 part2 :: String -> Either String Int
-part2 input = pure 0
+part2 input = do
+  octopuses <- runParser octopusesP input
+  note "Impossible: flashes never synchronize" $ ListL.findIndex isSynchronized $ iterate step octopuses
+  where
+  isSynchronized :: Octopuses -> Boolean
+  isSynchronized = all (_ == 0) <<< map snd <<< (Grid.toUnfoldable :: _ -> List _)
