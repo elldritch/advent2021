@@ -13,6 +13,7 @@ import Advent2021.Puzzles.D7Spec as D7Spec
 import Advent2021.Puzzles.D8Spec as D8Spec
 import Advent2021.Puzzles.D9Spec as D9Spec
 import Advent2021.Puzzles.D10Spec as D10Spec
+import Advent2021.Puzzles.D11Spec as D11Spec
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Test.Spec.Reporter (consoleReporter)
@@ -32,3 +33,4 @@ main =
         D8Spec.spec
         D9Spec.spec
         D10Spec.spec
+        D11Spec.spec

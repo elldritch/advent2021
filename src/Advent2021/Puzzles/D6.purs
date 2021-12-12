@@ -4,12 +4,12 @@ module Advent2021.Puzzles.D6
   ) where
 
 import Prelude
+import Advent2021.Helpers (iterateN)
 import Advent2021.Parsers (integer, newline, runParser)
 import Data.BigInt (BigInt, fromInt, toString)
-import Data.Either (Either, note)
+import Data.Either (Either)
 import Data.Foldable (sum, foldl)
 import Data.List (List, range)
-import Data.List.Lazy (drop, head, iterate)
 import Data.Map (Map, values)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
@@ -53,7 +53,8 @@ step fish = Map.fromFoldable $ map (\k -> Tuple k $ nextCount k) $ range 0 8
 simulate :: Int -> String -> Either String String
 simulate days input = do
   fishes <- toCounts <$> runParser inputP input
-  result <- note "Impossible: infinite list had missing element" $ head $ drop days $ iterate step fishes
+  let
+    result = iterateN step fishes days
   pure $ toString $ sum $ values result
   where
   inputP :: Parser (List Timer)
