@@ -52,21 +52,21 @@ part2 input = do
     $ lowPoints heightMap
   where
   basin :: HeightMap -> Position -> Set Position
-  basin heightMap start = basinR heightMap Set.empty $ List.singleton start
+  basin heightMap start = basinR Set.empty $ List.singleton start
+    where
+    basinR :: Set Position -> List Position -> Set Position
+    basinR seen queue = case List.uncons queue of
+      Just { head, tail } ->
+        let
+          next = adjacent heightMap head
 
-  basinR :: HeightMap -> Set Position -> List Position -> Set Position
-  basinR heightMap seen queue = case List.uncons queue of
-    Just { head, tail } ->
-      let
-        next = adjacent heightMap head
+          notWalls = List.filter ((_ /= 9) <<< snd) next
 
-        notWalls = List.filter ((_ /= 9) <<< snd) next
+          unseen = List.filter (not <<< flip Set.member seen <<< fst) notWalls
 
-        unseen = List.filter (not <<< flip Set.member seen <<< fst) notWalls
+          seen' = seen <> Set.fromFoldable (map fst unseen)
 
-        seen' = seen <> Set.fromFoldable (map fst unseen)
-
-        queue' = map fst unseen <> tail
-      in
-        basinR heightMap seen' queue'
-    Nothing -> seen
+          queue' = map fst unseen <> tail
+        in
+          basinR seen' queue'
+      Nothing -> seen

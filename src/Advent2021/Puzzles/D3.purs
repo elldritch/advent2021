@@ -7,9 +7,9 @@ import Prelude
 import Advent2021.Parsers (newline, runParser)
 import Control.Alternative ((<|>))
 import Data.Either (Either, note)
-import Data.Foldable (foldl, foldr, product)
+import Data.Foldable (foldl, foldr, product, length)
 import Data.Int (pow)
-import Data.List.NonEmpty (NonEmptyList, filterM, head, index, length, zip)
+import Data.List.NonEmpty (NonEmptyList, filterM, head, index, zip)
 import Data.List.NonEmpty as NEList
 import Data.Tuple (Tuple(..), fst, uncurry)
 import Text.Parsing.StringParser (Parser)
@@ -99,17 +99,16 @@ part2 =
     (NonEmptyList BitString -> Int -> Either String (NonEmptyList BitString)) ->
     NonEmptyList BitString ->
     Either String BitString
-  findRating pick bitstrings = head <$> findRatingRecurse pick 0 bitstrings
-
-  -- Is there a combinator for this?
-  findRatingRecurse ::
-    (NonEmptyList BitString -> Int -> Either String (NonEmptyList BitString)) ->
-    Int ->
-    NonEmptyList BitString ->
-    Either String (NonEmptyList BitString)
-  findRatingRecurse pick i bitstrings = do
-    next <- pick bitstrings i
-    if length next == 1 then pure next else findRatingRecurse pick (i + 1) next
+  findRating pick bitstrings = head <$> findRatingR 0 bitstrings
+    where
+    -- Is there a combinator for this?
+    findRatingR ::
+      Int ->
+      NonEmptyList BitString ->
+      Either String (NonEmptyList BitString)
+    findRatingR i candidates = do
+      next <- pick candidates i
+      if length next == 1 then pure next else findRatingR (i + 1) next
 
   pickByBit :: (BitCounts -> Bit) -> NonEmptyList BitString -> Either String BitString
   pickByBit pickBit =

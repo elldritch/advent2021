@@ -6,9 +6,9 @@ module Advent2021.Puzzles.D8
 import Prelude
 import Advent2021.Parsers (newline, runParser, space, word)
 import Data.Either (Either, note)
-import Data.Foldable (class Foldable, foldr, sum)
+import Data.Foldable (class Foldable, foldr, sum, length)
 import Data.Int as Int
-import Data.List (List, any, concat, length)
+import Data.List (List, any, concat)
 import Data.List as List
 import Data.Map as Map
 import Data.Set (Set, difference, intersection, subset)

@@ -9,9 +9,9 @@ import Control.Alternative ((<|>))
 import Data.BigInt (BigInt)
 import Data.BigInt as BigInt
 import Data.Either (Either(..), hush, note)
-import Data.Foldable (foldl)
+import Data.Foldable (foldl, length)
 import Data.Generic.Rep (class Generic)
-import Data.List (List(..), index, length, mapMaybe, sort, uncons, (:))
+import Data.List (List(..), index, mapMaybe, sort, uncons, (:))
 import Data.List.NonEmpty as NEList
 import Data.Maybe (Maybe(..))
 import Data.Show.Generic (genericShow)
