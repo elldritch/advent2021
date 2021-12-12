@@ -59,3 +59,7 @@ spec =
       D12.part1 input1 `shouldSucceed` 10
       D12.part1 input2 `shouldSucceed` 19
       D12.part1 input3 `shouldSucceed` 226
+    it "counts paths with revisits" do
+      D12.part2 input1 `shouldSucceed` 36
+      D12.part2 input2 `shouldSucceed` 103
+      D12.part2 input3 `shouldSucceed` 3509

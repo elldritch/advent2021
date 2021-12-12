@@ -7,7 +7,7 @@ import Prelude
 import Advent2021.Parsers (newline, runParser)
 import Data.Array as Array
 import Data.Either (Either, note)
-import Data.Foldable (fold, notElem, length)
+import Data.Foldable (any, fold, foldl, length, notElem)
 import Data.Generic.Rep (class Generic)
 import Data.List (List(..), concat, reverse, (:))
 import Data.List as List
@@ -73,8 +73,33 @@ connectionsP = unwrap <<< fold <<< map SemigroupMap <$> sepEndBy connectionP new
 type Path
   = List Cave
 
-findPaths :: Connections -> Either String (List Path)
-findPaths connections = findPathsR Nil (Small "start")
+showPath :: Path -> String
+showPath path =
+  String.joinWith ","
+    $ map
+        ( \cave -> case cave of
+            Big b -> b
+            Small s -> s
+        )
+    $ Array.fromFoldable path
+
+showPaths :: List Path -> String
+showPaths paths =
+  show (List.length paths)
+    <> ": \n"
+    <> String.joinWith "\n" (map showPath $ Array.fromFoldable paths)
+
+type CanVisitFunc
+  = { visited :: List Cave, reachable :: Set Cave } -> Set Cave
+
+run :: CanVisitFunc -> String -> Either String Int
+run getVisitable input = do
+  connections <- runParser (connectionsP <* eof) input
+  paths <- findPaths getVisitable connections
+  pure $ length paths
+
+findPaths :: CanVisitFunc -> Connections -> Either String (List Path)
+findPaths getVisitable connections = findPathsR Nil (Small "start")
   where
   findPathsR :: List Cave -> Cave -> Either String (List Path)
   findPathsR visited curr =
@@ -83,21 +108,43 @@ findPaths connections = findPathsR Nil (Small "start")
     else do
       reachable <- note "Impossible: cave is not in map" $ Map.lookup curr connections
       let
-        visitable =
-          Set.toUnfoldable
-            $ Set.filter
-                ( \cave -> case cave of
-                    Big _ -> true
-                    Small c -> notElem (Small c) visited
-                )
-                reachable
-      concat <$> sequence (findPathsR (curr : visited) <$> visitable)
+        visited' = curr : visited
+
+        visitable = Set.toUnfoldable $ getVisitable { visited: visited', reachable }
+      concat <$> sequence (findPathsR visited' <$> visitable)
 
 part1 :: String -> Either String Int
-part1 input = do
-  connections <- runParser (connectionsP <* eof) input
-  paths <- findPaths connections
-  pure $ length paths
+part1 =
+  run \{ visited, reachable } ->
+    Set.filter
+      ( \cave -> case cave of
+          Big _ -> true
+          Small c -> notElem (Small c) visited
+      )
+      reachable
 
 part2 :: String -> Either String Int
-part2 input = pure 0
+part2 =
+  run \{ visited, reachable } ->
+    Set.filter
+      ( \cave -> case cave of
+          Big _ -> true
+          Small "start" -> false
+          Small c ->
+            if anySmallCaveVisitedTwice visited then
+              notElem (Small c) visited
+            else
+              true
+      )
+      reachable
+  where
+  anySmallCaveVisitedTwice :: List Cave -> Boolean
+  anySmallCaveVisitedTwice =
+    any (_ >= 2)
+      <<< Map.values
+      <<< foldl
+          ( \counts cave -> case cave of
+              Big _ -> counts
+              Small s -> Map.insertWith (+) s 1 counts
+          )
+          Map.empty
