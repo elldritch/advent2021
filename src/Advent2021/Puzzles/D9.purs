@@ -4,13 +4,12 @@ module Advent2021.Puzzles.D9
   ) where
 
 import Prelude
-import Advent2021.Parsers (digit, newline, runParser)
+import Advent2021.Grid (Grid, Position, adjacent, gridP)
+import Advent2021.Parsers (runParser)
 import Data.Either (Either)
 import Data.Foldable (product)
-import Data.FunctorWithIndex (mapWithIndex)
-import Data.List (List(..), all, concat, mapMaybe, sortBy, take, (:))
+import Data.List (List, all, sortBy, take)
 import Data.List as List
-import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Ordering (invert)
@@ -19,47 +18,20 @@ import Data.Set as Set
 import Data.Traversable (sum)
 import Data.Tuple (Tuple(..), fst, snd)
 import Text.Parsing.StringParser (Parser)
-import Text.Parsing.StringParser.CodePoints (eof)
-import Text.Parsing.StringParser.Combinators (many, sepEndBy)
-
-type Position
-  = { x :: Int, y :: Int }
 
 type Height
   = Int
 
 type HeightMap
-  = Map Position Height
+  = Grid Height
 
 heightMapP :: Parser HeightMap
-heightMapP = do
-  digits <- sepEndBy (many digit) newline <* eof
-  pure $ Map.fromFoldable $ addPositions digits
-  where
-  addPositions :: List (List Height) -> List (Tuple Position Height)
-  addPositions heights =
-    concat
-      $ mapWithIndex
-          ( \y row ->
-              mapWithIndex
-                ( \x height ->
-                    Tuple { x, y } height
-                )
-                row
-          )
-          heights
-
-adjacents :: HeightMap -> Position -> List (Tuple Position Height)
-adjacents heightMap { x, y } = do
-  delta <- -1 : 1 : Nil
-  mapMaybe (\p -> Tuple p <$> lookup' p) $ { x: x + delta, y } : { x, y: y + delta } : Nil
-  where
-  lookup' p = Map.lookup p heightMap
+heightMapP = gridP identity
 
 lowPoints :: HeightMap -> List (Tuple Position Height)
 lowPoints heightMap =
   List.filter
-    (\(Tuple position height) -> all (_ > height) $ snd <$> adjacents heightMap position)
+    (\(Tuple position height) -> all (_ > height) $ snd <$> adjacent heightMap position)
     $ Map.toUnfoldable heightMap
 
 part1 :: String -> Either String Int
@@ -85,7 +57,7 @@ part2 input = do
   basinR heightMap seen queue = case List.uncons queue of
     Just { head, tail } ->
       let
-        next = adjacents heightMap head
+        next = adjacent heightMap head
 
         notWalls = List.filter ((_ /= 9) <<< snd) next
 
