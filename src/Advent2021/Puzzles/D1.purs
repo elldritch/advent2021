@@ -13,6 +13,7 @@ import Data.List.NonEmpty as NEList
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Text.Parsing.StringParser (Parser)
+import Text.Parsing.StringParser.CodePoints (eof)
 import Text.Parsing.StringParser.Combinators (sepEndBy)
 
 run :: (List Int -> Either String Int) -> String -> Either String Int
@@ -21,7 +22,7 @@ run count input = do
   count xs
   where
   inputP :: Parser (List Int)
-  inputP = sepEndBy integer newline
+  inputP = sepEndBy integer newline <* eof
 
 countIncreases :: forall f a. Foldable f => Ord a => f a -> Int
 countIncreases xs = case NEList.fromFoldable xs of

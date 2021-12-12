@@ -66,6 +66,7 @@ main = do
     { day: 9, part: 1 } -> run inputFile D9.part1
     { day: 9, part: 2 } -> run inputFile D9.part2
     { day: 10, part: 1 } -> run inputFile D10.part1
+    { day: 10, part: 2 } -> run inputFile D10.part2
     _ -> throw "Invalid puzzle day or part specified"
 
 run :: forall a. Show a => FilePath -> (String -> Either String a) -> Effect Unit

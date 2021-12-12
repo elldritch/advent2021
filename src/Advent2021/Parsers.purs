@@ -19,7 +19,7 @@ import Data.String.CodeUnits as StringCU
 import Text.Parsing.StringParser (Parser, fail, printParserError)
 import Text.Parsing.StringParser as StringParser
 import Text.Parsing.StringParser.CodePoints (anyDigit, char, string)
-import Text.Parsing.StringParser.Combinators (many)
+import Text.Parsing.StringParser.Combinators (many, many1)
 
 runParser :: forall a. Parser a -> String -> Either String a
 runParser a b = lmap printParserError $ StringParser.runParser a b
@@ -45,7 +45,7 @@ digit = do
 
 integer :: Parser Int
 integer = do
-  digits <- Array.fromFoldable <$> many anyDigit
+  digits <- Array.fromFoldable <$> many1 anyDigit
   let
     int = StringCU.fromCharArray digits
   case Int.fromString int of
