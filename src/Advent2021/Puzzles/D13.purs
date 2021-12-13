@@ -4,18 +4,19 @@ module Advent2021.Puzzles.D13
   ) where
 
 import Prelude
+import Advent2021.Grid (showGrid')
+import Advent2021.Grid as Grid
 import Advent2021.Parsers (integer, newline, runParser)
 import Control.Alternative ((<|>))
 import Data.Either (Either)
+import Data.Foldable (foldl)
 import Data.Generic.Rep (class Generic)
-import Data.List (List)
-import Data.List as List
-import Data.List.NonEmpty (NonEmptyList)
-import Data.List.NonEmpty as NEList
+import Data.List.NonEmpty (NonEmptyList, head, length, nub)
 import Data.Show.Generic (genericShow)
+import Data.Tuple (Tuple(..))
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (char, eof, string)
-import Text.Parsing.StringParser.Combinators (sepEndBy, sepEndBy1)
+import Text.Parsing.StringParser.Combinators (sepEndBy1)
 
 type Dot
   = { x :: Int, y :: Int }
@@ -28,7 +29,10 @@ dotP = do
   pure { x, y }
 
 type Paper
-  = List Dot
+  = NonEmptyList Dot
+
+showPaper :: Paper -> String
+showPaper dots = showGrid' identity $ Grid.fromFoldable1 "." $ map (\p -> Tuple p "#") dots
 
 data FoldInstruction
   = AlongX Int
@@ -49,7 +53,7 @@ foldInstructionP = do
 
 inputP :: Parser { dots :: Paper, foldInstructions :: NonEmptyList FoldInstruction }
 inputP = do
-  dots <- sepEndBy dotP newline
+  dots <- sepEndBy1 dotP newline
   newline
   foldInstructions <- sepEndBy1 foldInstructionP newline
   eof
@@ -57,7 +61,7 @@ inputP = do
 
 foldPaper :: Paper -> FoldInstruction -> Paper
 foldPaper dots instruction =
-  List.nub
+  nub
     $ case instruction of
         AlongX line -> map (\{ x, y } -> if x > line then { x: line - (x - line), y } else { x, y }) dots
         AlongY line -> map (\{ x, y } -> if y > line then { x, y: line - (y - line) } else { x, y }) dots
@@ -66,8 +70,12 @@ part1 :: String -> Either String Int
 part1 input = do
   { dots, foldInstructions } <- runParser inputP input
   let
-    folded = foldPaper dots $ NEList.head foldInstructions
-  pure $ List.length folded
+    folded = foldPaper dots $ head foldInstructions
+  pure $ length folded
 
-part2 :: String -> Either String Int
-part2 input = pure 0
+part2 :: String -> Either String String
+part2 input = do
+  { dots, foldInstructions } <- runParser inputP input
+  let
+    afterFolding = foldl foldPaper dots foldInstructions
+  pure $ showPaper afterFolding

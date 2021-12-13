@@ -75,15 +75,18 @@ main = do
     { day: 12, part: 1 } -> run inputFile D12.part1
     { day: 12, part: 2 } -> run inputFile D12.part2
     { day: 13, part: 1 } -> run inputFile D13.part1
-    { day: 13, part: 2 } -> run inputFile D13.part2
+    { day: 13, part: 2 } -> run' identity inputFile D13.part2
     _ -> throw "Invalid puzzle day or part specified"
 
 run :: forall a. Show a => FilePath -> (String -> Either String a) -> Effect Unit
-run inputFilePath solver =
+run = run' show
+
+run' :: forall a. (a -> String) -> FilePath -> (String -> Either String a) -> Effect Unit
+run' show' inputFilePath solver =
   catchException handler do
     input <- readTextFile UTF8 inputFilePath
     case solver input of
-      Right a -> log $ show a
+      Right a -> log $ show' a
       Left err -> warn ("Could not find solution: " <> err) *> exit 1
   where
   handler err = warn ("An exception occurred: " <> message err) *> exit 1

@@ -4,7 +4,7 @@ module Advent2021.Puzzles.D11
   ) where
 
 import Prelude
-import Advent2021.Grid (Grid, around, gridP, insertWith)
+import Advent2021.Grid (Grid, around, gridP)
 import Advent2021.Grid as Grid
 import Advent2021.Helpers (fix)
 import Advent2021.Parsers (runParser)
@@ -46,7 +46,7 @@ step prev = fix flash incremented
 
     energized =
       foldl
-        (\grid pos -> insertWith (\old new -> if old == 0 then 0 else old + new) pos 1 grid)
+        (\grid pos -> Grid.update (\old -> if old == 0 then 0 else old + 1) pos grid)
         octopuses
         $ fst
         <$> aroundFlash
