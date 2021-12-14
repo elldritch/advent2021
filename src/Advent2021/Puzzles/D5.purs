@@ -4,13 +4,13 @@ module Advent2021.Puzzles.D5
   ) where
 
 import Prelude
+import Advent2021.Helpers (uniqueCounts)
 import Advent2021.Parsers (integer, newline, runParser)
 import Data.Either (Either, note)
-import Data.Foldable (foldl)
 import Data.Generic.Rep (class Generic)
 import Data.List (List, concat, range, zip)
 import Data.List as List
-import Data.Map (empty, size)
+import Data.Map (size)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Ord (abs)
@@ -64,9 +64,7 @@ points (Line (Point x1 y1) (Point x2 y2)) =
 countOverlapPoints :: List Line -> Either String Int
 countOverlapPoints lines = do
   ps <- map concat $ note "Invalid input: line is not vertical, horizontal, or diagonal" $ sequence $ points <$> lines
-  let
-    counts = foldl (\m p -> Map.insertWith (+) p 1 m) empty ps
-  pure $ size $ Map.filter (_ > 1) counts
+  pure $ size $ Map.filter (_ > 1) $ uniqueCounts ps
 
 inputP :: Parser (List Line)
 inputP = sepEndBy lineP newline <* eof

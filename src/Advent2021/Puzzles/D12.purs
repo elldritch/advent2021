@@ -4,15 +4,17 @@ module Advent2021.Puzzles.D12
   ) where
 
 import Prelude
+import Advent2021.Helpers (uniqueCounts)
 import Advent2021.Parsers (newline, runParser)
 import Data.Array as Array
 import Data.Either (Either, note)
-import Data.Foldable (any, fold, foldl, length, notElem)
+import Data.Foldable (any, fold, length, notElem)
 import Data.Generic.Rep (class Generic)
-import Data.List (List(..), concat, reverse, (:))
+import Data.List (List(..), concat, mapMaybe, reverse, (:))
 import Data.List as List
 import Data.Map (Map, SemigroupMap(..))
 import Data.Map as Map
+import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Set (Set)
 import Data.Set as Set
@@ -142,9 +144,9 @@ part2 =
   anySmallCaveVisitedTwice =
     any (_ >= 2)
       <<< Map.values
-      <<< foldl
-          ( \counts cave -> case cave of
-              Big _ -> counts
-              Small s -> Map.insertWith (+) s 1 counts
+      <<< uniqueCounts
+      <<< mapMaybe
+          ( \cave -> case cave of
+              Big _ -> Nothing
+              Small s -> Just s
           )
-          Map.empty

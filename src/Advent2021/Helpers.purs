@@ -1,13 +1,17 @@
 module Advent2021.Helpers
-  ( fix
+  ( uniqueCounts
+  , fix
   , iterateN
   ) where
 
 import Prelude
 import Control.Monad.Rec.Class (untilJust)
 import Control.Monad.State (State, evalState, get, put)
+import Data.Foldable (class Foldable, foldl)
 import Data.List.Lazy (iterate)
 import Data.List.Lazy as ListL
+import Data.Map (Map)
+import Data.Map as Map
 import Data.Maybe (Maybe(..), fromJust)
 import Partial.Unsafe (unsafePartial)
 
@@ -27,3 +31,6 @@ fix f initial = evalState (untilJust $ f') initial
     else do
       put next
       pure Nothing
+
+uniqueCounts :: forall f a i. Foldable f => Ord a => Semiring i => f a -> Map a i
+uniqueCounts = foldl (\m e -> Map.insertWith add e one m) Map.empty

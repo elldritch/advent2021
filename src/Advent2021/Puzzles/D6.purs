@@ -4,11 +4,11 @@ module Advent2021.Puzzles.D6
   ) where
 
 import Prelude
-import Advent2021.Helpers (iterateN)
+import Advent2021.Helpers (uniqueCounts, iterateN)
 import Advent2021.Parsers (integer, newline, runParser)
 import Data.BigInt (BigInt, fromInt, toString)
 import Data.Either (Either)
-import Data.Foldable (sum, foldl)
+import Data.Foldable (sum)
 import Data.List (List, range)
 import Data.Map (Map, values)
 import Data.Map as Map
@@ -52,16 +52,13 @@ step fish = Map.fromFoldable $ map (\k -> Tuple k $ nextCount k) $ range 0 8
 
 simulate :: Int -> String -> Either String String
 simulate days input = do
-  fishes <- toCounts <$> runParser inputP input
+  fishes <- (_ `Map.union` fzero) <<< uniqueCounts <$> runParser inputP input
   let
     result = iterateN step fishes days
   pure $ toString $ sum $ values result
   where
   inputP :: Parser (List Timer)
   inputP = sepBy integer (char ',') <* newline <* eof
-
-  toCounts :: List Timer -> Fishes
-  toCounts = foldl (\m t -> Map.insertWith (+) t (fromInt 1) m) fzero
 
 part1 :: String -> Either String String
 part1 = simulate 80
