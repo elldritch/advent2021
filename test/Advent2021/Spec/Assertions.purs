@@ -1,14 +1,19 @@
 module Advent2021.Spec.Assertions
-  ( shouldParseTo
+  ( fromJust
+  , shouldParseTo
   , shouldSucceed
   ) where
 
 import Prelude
-import Control.Monad.Error.Class (class MonadThrow)
+import Control.Monad.Error.Class (class MonadThrow, throwError)
 import Data.Either (Either(..))
-import Effect.Exception (Error)
+import Data.Maybe (Maybe, maybe)
+import Effect.Exception (Error, error)
 import Test.Spec.Assertions (fail, shouldEqual)
 import Text.Parsing.StringParser (ParseError, printParserError)
+
+fromJust :: forall m a. MonadThrow Error m => Maybe a -> m a
+fromJust = maybe (throwError $ error "Maybe evaluated to Nothing") pure
 
 shouldParseTo :: forall a m. Eq a => Show a => MonadThrow Error m => (Either ParseError a) -> a -> m Unit
 shouldParseTo = shouldSucceed' printParserError

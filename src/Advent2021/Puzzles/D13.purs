@@ -32,7 +32,7 @@ type Paper
   = NonEmptyList Dot
 
 showPaper :: Paper -> String
-showPaper dots = showGrid' identity $ Grid.fromFoldable1 "." $ map (\p -> Tuple p "#") dots
+showPaper dots = showGrid' identity $ Grid.fromFoldable1 "." $ map (_ `Tuple` "#") dots
 
 data FoldInstruction
   = AlongX Int

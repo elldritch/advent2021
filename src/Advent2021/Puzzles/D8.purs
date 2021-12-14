@@ -60,21 +60,21 @@ part2 input = do
   where
   decipherDisplay :: Display -> Either String Int
   decipherDisplay { uniques, outputs } = do
-    one <- find' "1" (\signal -> Set.size signal == 2) uniques
-    four <- find' "4" (\signal -> Set.size signal == 4) uniques
-    seven <- find' "7" (\signal -> Set.size signal == 3) uniques
-    eight <- find' "8" (\signal -> Set.size signal == 7) uniques
+    one <- find' "1" ((_ == 2) <<< Set.size) uniques
+    four <- find' "4" ((_ == 4) <<< Set.size) uniques
+    seven <- find' "7" ((_ == 3) <<< Set.size) uniques
+    eight <- find' "8" ((_ == 7) <<< Set.size) uniques
     let
-      fiveSegmentSignals = List.filter (\signal -> Set.size signal == 5) uniques
-    three <- find' "3" (\signal -> one `subset` signal) fiveSegmentSignals
+      fiveSegmentSignals = List.filter ((_ == 5) <<< Set.size) uniques
+    three <- find' "3" (one `subset` _) fiveSegmentSignals
     let
       d = three `difference` one `intersection` four
 
       b = four `difference` one `difference` d
-    five <- find' "5" (\signal -> b `subset` signal) fiveSegmentSignals
+    five <- find' "5" (b `subset` _) fiveSegmentSignals
     two <- find' "2" (\signal -> signal /= five && signal /= three) fiveSegmentSignals
     let
-      sixSegmentSignals = List.filter (\signal -> Set.size signal == 6) uniques
+      sixSegmentSignals = List.filter ((_ == 6) <<< Set.size) uniques
     six <- find' "6" (\signal -> not $ one `subset` signal) sixSegmentSignals
     zero <- find' "0" (\signal -> not $ d `subset` signal) sixSegmentSignals
     nine <- find' "9" (\signal -> signal /= six && signal /= zero) sixSegmentSignals
@@ -95,7 +95,7 @@ part2 input = do
     digits <-
       note "Impossible: output signal not seen before"
         $ sequence
-        $ map (\signal -> Map.lookup signal signalToDigit) outputs
+        $ map (_ `Map.lookup` signalToDigit) outputs
     pure $ digitsToInt digits
 
   find' :: String -> (Signal -> Boolean) -> List Signal -> Either String Signal

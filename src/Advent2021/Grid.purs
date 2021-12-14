@@ -113,7 +113,7 @@ fromFoldable1 default elements = populated
     y <- range 0 maxY
     pure { x, y }
 
-  gridOfDefaults = Grid $ Map.fromFoldable $ map (\p -> Tuple p default) positions
+  gridOfDefaults = Grid $ Map.fromFoldable $ map (_ `Tuple` default) positions
 
   populated = foldl (\grid (Tuple p e) -> update (const e) p grid) gridOfDefaults elements
 

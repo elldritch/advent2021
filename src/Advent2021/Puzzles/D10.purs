@@ -106,7 +106,7 @@ part1 =
     let
       corrupted =
         mapMaybe
-          ( \result -> case result of
+          ( case _ of
               Right _ -> Nothing
               Left err -> Just err
           )

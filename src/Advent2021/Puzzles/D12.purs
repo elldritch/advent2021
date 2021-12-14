@@ -79,7 +79,7 @@ showPath :: Path -> String
 showPath path =
   String.joinWith ","
     $ map
-        ( \cave -> case cave of
+        ( case _ of
             Big b -> b
             Small s -> s
         )
@@ -119,7 +119,7 @@ part1 :: String -> Either String Int
 part1 =
   run \{ visited, reachable } ->
     Set.filter
-      ( \cave -> case cave of
+      ( case _ of
           Big _ -> true
           Small c -> notElem (Small c) visited
       )
@@ -129,7 +129,7 @@ part2 :: String -> Either String Int
 part2 =
   run \{ visited, reachable } ->
     Set.filter
-      ( \cave -> case cave of
+      ( case _ of
           Big _ -> true
           Small "start" -> false
           Small c ->
@@ -146,7 +146,7 @@ part2 =
       <<< Map.values
       <<< uniqueCounts
       <<< mapMaybe
-          ( \cave -> case cave of
+          ( case _ of
               Big _ -> Nothing
               Small s -> Just s
           )

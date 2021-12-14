@@ -1,8 +1,10 @@
 module Advent2021.Puzzles.D6Spec (spec) where
 
 import Prelude
+
 import Advent2021.Puzzles.D6 as D6
-import Advent2021.Spec.Assertions (shouldSucceed)
+import Advent2021.Spec.Assertions (fromJust, shouldSucceed)
+import Data.BigInt as BigInt
 import Test.Spec (Spec, describe, it)
 
 input :: String
@@ -12,6 +14,7 @@ spec :: Spec Unit
 spec =
   describe "Day 6" do
     it "simulates lanternfish count after 80 days" do
-      D6.part1 input `shouldSucceed` "5934"
+      D6.part1 input `shouldSucceed` BigInt.fromInt 5934
     it "simulates lanternfish count after 256 days" do
-      D6.part2 input `shouldSucceed` "26984457539"
+      x <- fromJust $ BigInt.fromString "26984457539"
+      D6.part2 input `shouldSucceed` x

@@ -7,6 +7,8 @@ import Prelude
 import Advent2021.Helpers (iterateN, uniqueCounts)
 import Advent2021.Parsers (newline, runParser)
 import Data.Array as Array
+import Data.BigInt (BigInt)
+import Data.BigInt as BigInt
 import Data.Either (Either, note)
 import Data.Foldable (foldl)
 import Data.List (List(..), (:))
@@ -85,7 +87,7 @@ step rules polymer = wrap $ NEList.head polymer :| tail'
   pairs :: forall a. NonEmptyList a -> List (Tuple a a)
   pairs xs = List.zip (NEList.toList xs) $ NEList.tail xs
 
-part1 :: String -> Either String Int
+part1 :: String -> Either String BigInt
 part1 input = do
   { template, rules } <- runParser inputP input
   let
@@ -97,5 +99,5 @@ part1 input = do
     minCount = minimum counts
   pure $ maxCount - minCount
 
-part2 :: String -> Either String Int
-part2 input = pure 0
+part2 :: String -> Either String BigInt
+part2 input = pure $ BigInt.fromInt 0

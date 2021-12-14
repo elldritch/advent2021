@@ -55,7 +55,7 @@ points (Line (Point x1 y1) (Point x2 y2)) =
   if x1 == x2 then
     Just $ Point x1 <$> range y1 y2
   else if y1 == y2 then
-    Just $ (\x -> Point x y1) <$> range x1 x2
+    Just $ (_ `Point` y1) <$> range x1 x2
   else if abs (x1 - x2) == abs (y1 - y2) then
     Just $ uncurry Point <$> zip (range x1 x2) (range y1 y2)
   else
