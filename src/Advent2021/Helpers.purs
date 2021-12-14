@@ -1,7 +1,8 @@
 module Advent2021.Helpers
-  ( uniqueCounts
-  , fix
+  ( fix
   , iterateN
+  , iterateN'
+  , uniqueCounts
   ) where
 
 import Prelude
@@ -17,6 +18,11 @@ import Partial.Unsafe (unsafePartial)
 
 iterateN :: forall a. (a -> a) -> a -> Int -> a
 iterateN f initial n = unsafePartial $ fromJust $ ListL.head $ ListL.drop n $ iterate f initial
+
+iterateN' :: forall m a. Monad m => (a -> m a) -> a -> Int -> m a
+iterateN' _ initial 0 = pure initial
+
+iterateN' f initial n = iterateN' f initial (n - 1) >>= f
 
 fix :: forall a. Eq a => (a -> a) -> a -> a
 fix f initial = evalState (untilJust $ f') initial
