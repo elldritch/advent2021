@@ -18,9 +18,10 @@ import Advent2021.Puzzles.D12 as D12
 import Advent2021.Puzzles.D13 as D13
 import Advent2021.Puzzles.D14 as D14
 import Data.Either (Either(..))
+import Data.Maybe (fromMaybe)
 import Effect (Effect)
 import Effect.Console (log, warn)
-import Effect.Exception (catchException, message, throw)
+import Effect.Exception (catchException, message, name, stack, throw)
 import Node.Encoding (Encoding(..))
 import Node.FS.Sync (readTextFile)
 import Node.Path (FilePath)
@@ -92,4 +93,4 @@ run' show' inputFilePath solver =
       Right a -> log $ show' a
       Left err -> warn ("Could not find solution: " <> err) *> exit 1
   where
-  handler err = warn ("An exception occurred: " <> message err) *> exit 1
+  handler err = warn ("An exception occurred: " <> fromMaybe (name err <> ": " <> message err) (stack err)) *> exit 1

@@ -8,6 +8,7 @@ import Advent2021.Helpers (iterateN, uniqueCounts)
 import Advent2021.Parsers (newline, runParser)
 import Data.Array as Array
 import Data.Either (Either, note)
+import Data.Foldable (foldl)
 import Data.List (List(..), (:))
 import Data.List as List
 import Data.List.NonEmpty (NonEmptyList)
@@ -68,9 +69,12 @@ inputP = do
 step :: InsertionRules -> Polymer -> Polymer
 step rules polymer = wrap $ NEList.head polymer :| tail'
   where
+  concat' :: forall a. List (List a) -> List a
+  concat' = foldl append Nil
+
   tail' :: List Element
   tail' =
-    ( List.concat
+    ( concat'
         $ ( \pair@(Tuple _ right) -> case Map.lookup pair rules of
               Just insert -> insert : right : Nil
               Nothing -> right : Nil
