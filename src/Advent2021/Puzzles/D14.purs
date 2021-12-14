@@ -8,9 +8,8 @@ import Advent2021.Helpers (iterateN, uniqueCounts)
 import Advent2021.Parsers (newline, runParser)
 import Data.Array as Array
 import Data.BigInt (BigInt)
-import Data.BigInt as BigInt
 import Data.Either (Either, note)
-import Data.Foldable (foldl)
+import Data.Foldable (foldr)
 import Data.List (List(..), (:))
 import Data.List as List
 import Data.List.NonEmpty (NonEmptyList)
@@ -71,18 +70,15 @@ inputP = do
 step :: InsertionRules -> Polymer -> Polymer
 step rules polymer = wrap $ NEList.head polymer :| tail'
   where
-  concat' :: forall a. List (List a) -> List a
-  concat' = foldl append Nil
-
   tail' :: List Element
   tail' =
-    ( concat'
-        $ ( \pair@(Tuple _ right) -> case Map.lookup pair rules of
-              Just insert -> insert : right : Nil
-              Nothing -> right : Nil
-          )
-        <$> pairs polymer
-    )
+    foldr
+      ( \pair@(Tuple _ right) xs -> case Map.lookup pair rules of
+          Just insert -> insert : right : xs
+          Nothing -> right : xs
+      )
+      Nil
+      $ pairs polymer
 
   pairs :: forall a. NonEmptyList a -> List (Tuple a a)
   pairs xs = List.zip (NEList.toList xs) $ NEList.tail xs
@@ -100,4 +96,13 @@ part1 input = do
   pure $ maxCount - minCount
 
 part2 :: String -> Either String BigInt
-part2 input = pure $ BigInt.fromInt 0
+part2 input = do
+  { template, rules } <- runParser inputP input
+  let
+    polymerized = iterateN (step rules) template 40
+  counts <- note "Invalid input: polymer is empty" $ NEList.fromFoldable $ Map.values $ uniqueCounts polymerized
+  let
+    maxCount = maximum counts
+
+    minCount = minimum counts
+  pure $ maxCount - minCount
