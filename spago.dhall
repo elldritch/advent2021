@@ -26,6 +26,7 @@
   , "prelude"
   , "psci-support"
   , "spec"
+  , "st"
   , "string-parsers"
   , "strings"
   , "tailrec"
