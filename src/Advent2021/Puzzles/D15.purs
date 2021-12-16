@@ -4,16 +4,18 @@ module Advent2021.Puzzles.D15
   ) where
 
 import Prelude
-import Advent2021.Grid (Grid, Position, adjacent, gridP)
+import Advent2021.Grid (Grid, Position, gridP)
 import Advent2021.Grid as Grid
 import Advent2021.Parsers (runParser)
+import Control.Monad.State (StateT, evalStateT, get, lift, put)
 import Data.Either (Either, note)
-import Data.List (List, concatMap, (:))
-import Data.List as List
-import Data.Set (Set)
-import Data.Set as Set
-import Data.Traversable (minimum, sequence, sum)
-import Data.Tuple (fst)
+import Data.List.NonEmpty as NEList
+import Data.Map (Map)
+import Data.Map as Map
+import Data.Maybe (Maybe(..))
+import Data.Semigroup.Foldable (minimum)
+import Data.Traversable (traverse)
+import Debug (spyWith)
 import Text.Parsing.StringParser.CodePoints (eof)
 
 type Risk
@@ -22,53 +24,49 @@ type Risk
 type Cavern
   = Grid Risk
 
-type Path t
-  = List t
-
-pathsTo ::
-  forall vertex.
-  Ord vertex =>
-  (vertex -> List vertex) ->
-  vertex ->
-  vertex ->
-  List (Path vertex)
-pathsTo next start destination = pathByR (Set.singleton start) start
+lowestRiskPath :: Grid Risk -> Either String Risk
+lowestRiskPath grid = evalStateT (lowestRiskPathToR { x: 0, y: 0 }) Map.empty
   where
-  pathByR :: Set vertex -> vertex -> List (Path vertex)
-  pathByR seen curr =
-    if curr == destination then
-      List.singleton $ List.singleton curr
-    else
-      paths
-    where
-    frontier = next curr
+  { maxX, maxY } = (\{ x, y } -> { maxX: x - 1, maxY: y - 1 }) $ Grid.dimensions grid
 
-    unseen = List.filter (_ `not Set.member` seen) frontier
+  lookup' = note "Impossible: risk lookup out-of-bounds" <<< Grid.lookup grid
 
-    paths = map (curr : _) $ concatMap (pathByR $ Set.insert curr seen) unseen
+  lowestRiskPathToR :: Position -> StateT (Map Position Risk) (Either String) Risk
+  lowestRiskPathToR { x, y } = do
+    memo <- get
+    case spyWith ("lookup " <> show { x, y }) show $ Map.lookup { x, y } memo of
+      Just risk -> pure risk
+      Nothing -> do
+        result <-
+          if x == maxX && y == maxY then do
+            put $ Map.insert { x, y } (spyWith ("put " <> show { x, y }) show $ 0) memo
+            pure 0
+          else do
+            let
+              nexts =
+                if y == maxY then
+                  NEList.singleton { x: x + 1, y }
+                else if x == maxX then
+                  NEList.singleton { x, y: y + 1 }
+                else
+                  NEList.cons { x: x + 1, y } $ NEList.singleton { x, y: y + 1 }
+            risks <-
+              traverse
+                ( \next -> do
+                    risk <- lift $ lookup' next
+                    nextRisk <- lowestRiskPathToR next
+                    put $ Map.insert { x, y } (spyWith ("put " <> show { x, y }) show (risk + nextRisk)) memo
+                    pure $ risk + nextRisk
+                )
+                nexts
+            pure $ minimum risks
+        put $ Map.insert { x, y } result memo
+        pure result
 
 part1 :: String -> Either String Int
 part1 input = do
   cavern <- runParser (gridP identity <* eof) input
-  let
-    paths = leastRiskPath cavern
-  risksOfPaths <- sequence $ map (riskOfPath cavern) paths
-  minPathRisk <- note "Invalid input: no paths found" $ minimum risksOfPaths
-  startRisk <- note "Invalid input: grid is empty" $ Grid.lookup cavern { x: 0, y: 0 }
-  pure $ minPathRisk - startRisk
-  where
-  leastRiskPath :: Grid Risk -> List (Path Position)
-  leastRiskPath grid =
-    pathsTo
-      -- Lemma: you always want to go right or left. Simple proof via dynamic programming solution.
-      (\{ x, y } -> List.filter (\{ x: x', y: y' } -> x' > x || y' > y) $ map fst $ adjacent grid { x, y })
-      { x: 0, y: 0 }
-      ((\{ x, y } -> { x: x - 1, y: y - 1 }) $ Grid.dimensions grid)
-
-  riskOfPath :: Grid Risk -> Path Position -> Either String Risk
-  riskOfPath cavern path = do
-    riskLevels <- note "Impossible: path is out-of-bounds" $ sequence $ map (Grid.lookup cavern) path
-    pure $ sum riskLevels
+  lowestRiskPath cavern
 
 part2 :: String -> Either String Int
 part2 input = pure 0
