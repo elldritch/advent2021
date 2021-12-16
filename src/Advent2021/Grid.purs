@@ -3,8 +3,10 @@ module Advent2021.Grid
   , Position
   , adjacent
   , around
+  , dimensions
   , fromFoldable1
   , gridP
+  , lookup
   , showGrid
   , showGrid'
   , toUnfoldable
@@ -15,9 +17,10 @@ import Prelude
 import Advent2021.Parsers (digit, newline)
 import Data.Array as Array
 import Data.Foldable (class Foldable, foldl)
-import Data.FoldableWithIndex (class FoldableWithIndex)
+import Data.FoldableWithIndex (class FoldableWithIndex, foldlWithIndex)
 import Data.FunctorWithIndex (class FunctorWithIndex, mapWithIndex)
-import Data.List (List(..), catMaybes, concat, filter, groupBy, mapMaybe, range, sortBy, (:))
+import Data.List (List(..), concat, groupBy, range, sortBy, (:))
+import Data.List as List
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
@@ -121,17 +124,28 @@ fromFoldable1 default elements = populated
 update :: forall t. (t -> t) -> Position -> Grid t -> Grid t
 update f k (Grid m) = Grid $ Map.update (Just <<< f) k m
 
+lookup :: forall t. Grid t -> Position -> Maybe t
+lookup (Grid m) k = Map.lookup k m
+
+dimensions :: forall t. Grid t -> { x :: Int, y :: Int }
+dimensions (Grid m) =
+  (\{ x, y } -> { x: x + 1, y: y + 1 })
+    $ foldlWithIndex
+        (\{ x, y } { x: maxX, y: maxY } _ -> { x: max maxX x, y: max maxY y })
+        { x: 0, y: 0 }
+        m
+
 adjacent :: forall t. Grid t -> Position -> List (Tuple Position t)
 adjacent (Grid grid) { x, y } = do
   delta <- -1 : 1 : Nil
-  mapMaybe (\p -> Tuple p <$> lookup' p) $ { x: x + delta, y } : { x, y: y + delta } : Nil
+  List.mapMaybe (\p -> Tuple p <$> lookup' p) $ { x: x + delta, y } : { x, y: y + delta } : Nil
   where
   lookup' p = Map.lookup p grid
 
 around :: forall t. Grid t -> Position -> List (Tuple Position t)
 around (Grid grid) { x, y } =
-  filter (\(Tuple { x: x', y: y' } _) -> not (x' == x && y' == y))
-    $ catMaybes
+  List.filter (\(Tuple { x: x', y: y' } _) -> not (x' == x && y' == y))
+    $ List.catMaybes
     $ do
         dx <- delta
         dy <- delta

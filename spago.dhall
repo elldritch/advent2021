@@ -19,7 +19,6 @@
   , "node-fs"
   , "node-path"
   , "node-process"
-  , "nonempty"
   , "optparse"
   , "ordered-collections"
   , "partial"
