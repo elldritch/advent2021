@@ -7,6 +7,7 @@ import Prelude
 import Advent2021.Grid (Grid, Position, adjacent, gridP)
 import Advent2021.Grid as Grid
 import Advent2021.Parsers (runParser)
+import Control.Monad.Rec.Class (Step(..), tailRecM, tailRecM2)
 import Data.Array as Array
 import Data.Either (Either, note)
 import Data.Foldable (foldl, sum)
@@ -48,25 +49,27 @@ aStar ::
   Either String (NonEmptyList Position)
 aStar next heuristic start destination = do
   completeFroms <-
-    aStarR
+    tailRecM2
+      aStarR
       (Set.singleton start)
       (Map.singleton start { from: start, distance: 0, estimate: heuristic start })
   reconstructPath completeFroms
   where
   reconstructPath :: Map Position ShortestPath -> Either String (NonEmptyList Position)
-  reconstructPath completeFroms = reconstructPathR (NEList.singleton destination)
+  reconstructPath completeFroms = tailRecM reconstructPathR (NEList.singleton destination)
     where
-    reconstructPathR :: NonEmptyList Position -> Either String (NonEmptyList Position)
+    reconstructPathR :: NonEmptyList Position -> Either String (Step (NonEmptyList Position) (NonEmptyList Position))
     reconstructPathR path =
       let
         curr = NEList.head path
       in
         if curr == start then
-          pure $ NEList.reverse path
+          pure $ Done $ NEList.reverse path
         else do
           { from } <- note "Impossible: reconstructing path with unknown vertex" $ Map.lookup curr completeFroms
-          reconstructPathR $ NEList.cons from path
+          pure $ Loop $ NEList.cons from path
 
+  -- This is a stack-safe variant of sortBy. See https://github.com/purescript/purescript-lists/issues/192.
   sortBy' :: forall a. (a -> a -> Ordering) -> NonEmptyList a -> NonEmptyList a
   sortBy' cmp =
     unsafePartial fromJust
@@ -77,7 +80,7 @@ aStar next heuristic start destination = do
   aStarR ::
     Set Position ->
     Map Position ShortestPath ->
-    Either String (Map Position ShortestPath)
+    Either String (Step { a :: Set Position, b :: Map Position ShortestPath } (Map Position ShortestPath))
   aStarR queue best = do
     neQueue <- note "Destination not reachable" $ NESet.fromSet queue
     let
@@ -89,7 +92,7 @@ aStar next heuristic start destination = do
 
       current = NEList.head pQueue
     if current == destination then
-      pure best
+      pure $ Done best
     else do
       currentDistance <-
         map _.distance
@@ -101,7 +104,7 @@ aStar next heuristic start destination = do
         { best', toExplore } = foldl (update { current, currentDistance }) { best': best, toExplore: Nil } frontier
 
         queue' = Set.fromFoldable $ (NEList.tail pQueue) <> toExplore
-      aStarR queue' best'
+      pure $ Loop { a: queue', b: best' }
     where
     update ::
       { current :: Position, currentDistance :: Distance } ->
