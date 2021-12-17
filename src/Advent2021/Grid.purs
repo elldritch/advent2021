@@ -10,29 +10,35 @@ module Advent2021.Grid
   , showGrid
   , showGrid'
   , toUnfoldable
+  , toUnfoldable1
   , update
   ) where
 
 import Prelude
 import Advent2021.Parsers (digit, newline)
 import Data.Array as Array
+import Data.Array.NonEmpty as NEArray
 import Data.Foldable (class Foldable, foldl)
 import Data.FoldableWithIndex (class FoldableWithIndex, foldlWithIndex)
 import Data.FunctorWithIndex (class FunctorWithIndex, mapWithIndex)
-import Data.List (List(..), concat, groupBy, range, sortBy, (:))
+import Data.List (List(..), groupBy, range, sortBy, (:))
 import Data.List as List
+import Data.List.NonEmpty (NonEmptyList)
+import Data.List.NonEmpty as NEList
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromJust)
 import Data.Semigroup.Foldable (class Foldable1, maximumBy)
 import Data.String as String
 import Data.Traversable (class Traversable)
 import Data.TraversableWithIndex (class TraversableWithIndex)
 import Data.Tuple (Tuple(..), fst)
 import Data.Unfoldable (class Unfoldable)
+import Data.Unfoldable1 (class Unfoldable1)
+import Partial.Unsafe (unsafePartial)
 import PointFree ((<..))
 import Text.Parsing.StringParser (Parser)
-import Text.Parsing.StringParser.Combinators (many, sepEndBy)
+import Text.Parsing.StringParser.Combinators (many1, sepEndBy1)
 
 type Position
   = { x :: Int, y :: Int }
@@ -72,12 +78,12 @@ unGrid (Grid m) = m
 
 gridP :: forall t. (Int -> t) -> Parser (Grid t)
 gridP fromDigit = do
-  cells <- sepEndBy (many $ fromDigit <$> digit) newline
+  cells <- sepEndBy1 (many1 $ fromDigit <$> digit) newline
   pure $ Grid $ Map.fromFoldable $ addPositions $ cells
   where
-  addPositions :: List (List t) -> List (Tuple Position t)
+  addPositions :: NonEmptyList (NonEmptyList t) -> NonEmptyList (Tuple Position t)
   addPositions heights =
-    concat
+    NEList.concat
       $ mapWithIndex
           ( \y row ->
               mapWithIndex
@@ -100,6 +106,13 @@ showGrid' show' grid =
     $ sortBy (comparing $ _.y <<< fst)
     $ sortBy (comparing $ _.x <<< fst)
     $ toUnfoldable grid
+
+toUnfoldable1 :: forall t f. Unfoldable1 f => Grid t -> f (Tuple Position t)
+toUnfoldable1 =
+  NEArray.toUnfoldable1
+    <<< unsafePartial fromJust
+    <<< NEArray.fromArray
+    <<< toUnfoldable
 
 toUnfoldable :: forall t f. Unfoldable f => Grid t -> f (Tuple Position t)
 toUnfoldable = Map.toUnfoldable <<< unGrid

@@ -24,3 +24,5 @@ spec =
   describe "Day 15" do
     it "finds the lowest risk path" do
       D15.part1 input `shouldSucceed` 40
+    it "finds paths through full maps" do
+      D15.part2 input `shouldSucceed` 315

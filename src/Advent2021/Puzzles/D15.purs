@@ -23,6 +23,7 @@ import Data.Set as Set
 import Data.Set.NonEmpty as NESet
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), fst)
+import Data.Unfoldable1 (range)
 import Partial.Unsafe (unsafePartial)
 import Text.Parsing.StringParser.CodePoints (eof)
 
@@ -135,9 +136,8 @@ aStar next heuristic start destination = do
 
   comparingDistance (Just a) (Just b) = compare a b
 
-part1 :: String -> Either String Int
-part1 input = do
-  cavern <- runParser (gridP identity <* eof) input
+lowestRiskPath :: Grid Risk -> Either String Int
+lowestRiskPath cavern = do
   let
     start = { x: 0, y: 0 }
 
@@ -152,5 +152,44 @@ part1 input = do
   risks <- traverse (note "Impossible: path contains unknown vertex" <<< Grid.lookup cavern) path
   pure $ sum risks - startRisk
 
+part1 :: String -> Either String Int
+part1 input = do
+  cavern <- runParser (gridP identity <* eof) input
+  lowestRiskPath cavern
+
+type GridEntries t
+  = NonEmptyList (Tuple Position t)
+
 part2 :: String -> Either String Int
-part2 input = pure 0
+part2 input = do
+  cavern <- runParser (gridP identity <* eof) input
+  let
+    tiles :: GridEntries Risk
+    tiles =
+      NEList.concat do
+        tileX <- range 0 4
+        tileY <- range 0 4
+        pure $ tile cavern { tileX, tileY }
+
+    fullCavern = Grid.fromFoldable1 0 tiles
+  lowestRiskPath fullCavern
+  where
+  tile :: Grid Risk -> { tileX :: Int, tileY :: Int } -> GridEntries Risk
+  tile grid { tileX, tileY } =
+    map
+      ( \(Tuple { x, y } t) ->
+          Tuple
+            { x: x + (dims.x * tileX)
+            , y: y + (dims.y * tileY)
+            }
+            ( let
+                t' = t + tileX + tileY
+              in
+                if t' > 9 then ((t' - 1) `mod` 9) + 1 else t'
+            )
+      )
+      entries
+    where
+    dims = Grid.dimensions grid
+
+    entries = Grid.toUnfoldable1 grid
