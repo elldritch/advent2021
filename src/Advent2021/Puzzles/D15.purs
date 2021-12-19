@@ -85,6 +85,8 @@ aStar next heuristic start destination = do
   aStarR queue best = do
     neQueue <- note "Destination not reachable" $ NESet.fromSet queue
     let
+      -- TODO: The biggest performance gains will probably be from using a real
+      -- priority queue here. Doing this map lookup over and over again is slow.
       pQueue =
         map fst
           $ sortBy' (\(Tuple _ a) (Tuple _ b) -> comparingDistance a b)
@@ -122,7 +124,10 @@ aStar next heuristic start destination = do
         { best':
             Map.insert
               neighbor
-              { from: current, distance: distance', estimate: distance' + heuristic neighbor }
+              { from: current
+              , distance: distance'
+              , estimate: distance' + heuristic neighbor
+              }
               best'
         , toExplore: neighbor : toExplore
         }
