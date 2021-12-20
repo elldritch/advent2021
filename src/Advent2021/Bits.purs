@@ -3,19 +3,22 @@ module Advent2021.Bits
   , BitString
   , _0
   , _1
+  , bit0P
+  , bit1P
   , fromBinaryDigit
   , fromBinaryString
   , fromHexDigit
   , fromHexString
   , fromInt
   , padZerosTo
+  , showBinaryString
   , toInt
   ) where
 
 import Prelude
 import Advent2021.Parsers (digit)
 import Control.Alternative ((<|>))
-import Data.Foldable (foldr)
+import Data.Foldable (fold, foldr)
 import Data.Int (pow)
 import Data.List.NonEmpty (NonEmptyList)
 import Data.List.NonEmpty as NEList
@@ -36,17 +39,26 @@ instance showBit :: Show Bit where
 _1 :: Bit
 _1 = Bit true
 
+bit1P :: Parser Bit
+bit1P = char '1' $> Bit true
+
+bit0P :: Parser Bit
+bit0P = char '0' $> Bit false
+
 _0 :: Bit
 _0 = Bit false
 
 fromBinaryDigit :: Parser Bit
-fromBinaryDigit = (char '1' $> Bit true) <|> (char '0' $> Bit false)
+fromBinaryDigit = bit1P <|> bit0P
 
 type BitString
   = NonEmptyList Bit
 
 fromBinaryString :: Parser BitString
 fromBinaryString = many1 fromBinaryDigit
+
+showBinaryString :: BitString -> String
+showBinaryString = fold <<< map show
 
 fromHexDigit :: Parser BitString
 fromHexDigit =
