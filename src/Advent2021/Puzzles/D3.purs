@@ -4,45 +4,17 @@ module Advent2021.Puzzles.D3
   ) where
 
 import Prelude
+import Advent2021.Bits (Bit(..), BitString, _0, _1, fromBinaryString)
+import Advent2021.Bits as Bits
 import Advent2021.Parsers (newline, runParser)
-import Control.Alternative ((<|>))
 import Data.Either (Either, note)
-import Data.Foldable (foldl, foldr, product, length)
-import Data.Int (pow)
+import Data.Foldable (foldl, length, product)
 import Data.List.NonEmpty (NonEmptyList, filterM, head, index, zip)
 import Data.List.NonEmpty as NEList
-import Data.Tuple (Tuple(..), fst, uncurry)
+import Data.Tuple (uncurry)
 import Text.Parsing.StringParser (Parser)
-import Text.Parsing.StringParser.CodePoints (char, eof)
+import Text.Parsing.StringParser.CodePoints (eof)
 import Text.Parsing.StringParser.Combinators (many1)
-
-newtype Bit
-  = Bit Boolean
-
-derive newtype instance eqBit :: Eq Bit
-
-_1 :: Bit
-_1 = Bit true
-
-_0 :: Bit
-_0 = Bit false
-
-bitP :: Parser Bit
-bitP = (char '1' *> pure (Bit true)) <|> (char '0' *> pure (Bit false))
-
-type BitString
-  = NonEmptyList Bit
-
-bitstringP :: Parser BitString
-bitstringP = many1 bitP
-
-toInt :: BitString -> Int
-toInt bits =
-  fst
-    $ foldr
-        (\(Bit b) (Tuple acc i) -> (Tuple (acc + if b then 2 `pow` i else 0) (i + 1)))
-        (Tuple 0 0)
-        bits
 
 type BitCounts
   = { ones :: Int, zeros :: Int }
@@ -74,13 +46,13 @@ run :: (NonEmptyList BitString -> Either String Int) -> String -> Either String 
 run solver input = runParser inputP input >>= solver
   where
   inputP :: Parser (NonEmptyList BitString)
-  inputP = many1 (bitstringP <* newline) <* eof
+  inputP = many1 (fromBinaryString <* newline) <* eof
 
 part1 :: String -> Either String Int
 part1 =
   run \bitstrings ->
     pure $ product
-      $ map (\f -> toInt $ f $ countBitOccurrences bitstrings) [ epsilonBitString, gammaBitString ]
+      $ map (\f -> Bits.toInt $ f $ countBitOccurrences bitstrings) [ epsilonBitString, gammaBitString ]
   where
   gammaBitString :: BitStringCounts -> BitString
   gammaBitString = map (\{ ones, zeros } -> if ones > zeros then (Bit true) else (Bit false))
@@ -93,7 +65,7 @@ part2 =
   run \bitstrings -> do
     o <- oxygenGeneratorRating bitstrings
     c <- co2ScrubberRating bitstrings
-    pure $ toInt o * toInt c
+    pure $ Bits.toInt o * Bits.toInt c
   where
   findRating ::
     (NonEmptyList BitString -> Int -> Either String (NonEmptyList BitString)) ->
