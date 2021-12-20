@@ -13,15 +13,12 @@ module Advent2021.Bits
   ) where
 
 import Prelude
-import Advent2021.Debug (undefined)
 import Advent2021.Parsers (digit)
 import Control.Alternative ((<|>))
 import Data.Foldable (foldr)
 import Data.Int (pow)
-import Data.List (List)
 import Data.List.NonEmpty (NonEmptyList)
 import Data.List.NonEmpty as NEList
-import Data.Tuple (Tuple(..), fst)
 import Data.Unfoldable1 (replicate1)
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (char)
@@ -31,6 +28,10 @@ newtype Bit
   = Bit Boolean
 
 derive newtype instance eqBit :: Eq Bit
+
+instance showBit :: Show Bit where
+  show (Bit true) = "1"
+  show (Bit false) = "0"
 
 _1 :: Bit
 _1 = Bit true
@@ -65,17 +66,19 @@ fromHexString = NEList.concat <$> many1 fromHexDigit
 
 toInt :: BitString -> Int
 toInt bits =
-  fst
+  _.acc
     $ foldr
-        (\(Bit b) (Tuple acc i) -> (Tuple (acc + if b then 2 `pow` i else 0) (i + 1)))
-        (Tuple 0 0)
+        (\(Bit b) { acc, base } -> { acc: acc + if b then 2 `pow` base else 0, base: base + 1 })
+        ({ acc: 0, base: 0 })
         bits
 
 fromInt :: Int -> BitString
-fromInt n = undefined
+fromInt n = fromIntR (n / 2) $ NEList.singleton $ if n `mod` 2 == 1 then _1 else _0
   where
-  fromIntR :: Int -> List Bit
-  fromIntR x = undefined
+  fromIntR :: Int -> BitString -> BitString
+  fromIntR 0 bs = bs
+
+  fromIntR x bs = fromIntR (x / 2) $ NEList.cons (if x `mod` 2 == 1 then _1 else _0) bs
 
 padZerosTo :: Int -> BitString -> BitString
 padZerosTo width bs =

@@ -3,6 +3,7 @@ module Test.Main
   ) where
 
 import Prelude
+import Advent2021.BitsSpec as BitsSpec
 import Advent2021.Puzzles.D10Spec as D10Spec
 import Advent2021.Puzzles.D11Spec as D11Spec
 import Advent2021.Puzzles.D12Spec as D12Spec
@@ -29,6 +30,8 @@ main :: Effect Unit
 main =
   launchAff_
     $ runSpec [ consoleReporter ] do
+        describe "Utilities" do
+          BitsSpec.spec
         describe "Puzzles" do
           D1Spec.spec
           D2Spec.spec
