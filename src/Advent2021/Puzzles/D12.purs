@@ -19,7 +19,6 @@ import Data.Newtype (unwrap)
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Show.Generic (genericShow)
-import Data.String (joinWith) as String
 import Data.String (toLower, toUpper)
 import Data.String.CodeUnits (fromCharArray) as String
 import Data.Traversable (sequence)
@@ -56,12 +55,6 @@ caveP = do
 type Connections
   = Map Cave (Set Cave)
 
-showGraph :: forall a. Show a => Map a (Set a) -> String
-showGraph m =
-  String.joinWith "\n"
-    $ (\(Tuple vertex edges) -> show vertex <> ": " <> show edges)
-    <$> Map.toUnfoldable m
-
 connectionsP :: Parser Connections
 connectionsP = unwrap <<< fold <<< map SemigroupMap <$> sepEndBy connectionP newline
   where
@@ -74,22 +67,6 @@ connectionsP = unwrap <<< fold <<< map SemigroupMap <$> sepEndBy connectionP new
 
 type Path
   = List Cave
-
-showPath :: Path -> String
-showPath path =
-  String.joinWith ","
-    $ map
-        ( case _ of
-            Big b -> b
-            Small s -> s
-        )
-    $ Array.fromFoldable path
-
-showPaths :: List Path -> String
-showPaths paths =
-  show (List.length paths)
-    <> ": \n"
-    <> String.joinWith "\n" (map showPath $ Array.fromFoldable paths)
 
 type CanVisitFunc
   = { visited :: List Cave, reachable :: Set Cave } -> Set Cave

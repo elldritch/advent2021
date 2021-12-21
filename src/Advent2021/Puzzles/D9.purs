@@ -7,13 +7,12 @@ import Prelude
 import Advent2021.Grid (Grid, Position, adjacent, gridP)
 import Advent2021.Grid as Grid
 import Advent2021.Parsers (runParser)
+import Advent2021.Paths (reachable)
 import Data.Either (Either)
 import Data.Foldable (product)
 import Data.List (List, all, sortBy, take)
 import Data.List as List
-import Data.Maybe (Maybe(..))
 import Data.Ordering (invert)
-import Data.Set (Set)
 import Data.Set as Set
 import Data.Traversable (sum)
 import Data.Tuple (Tuple(..), fst, snd)
@@ -43,30 +42,13 @@ part1 input = do
 part2 :: String -> Either String Int
 part2 input = do
   heightMap <- runParser heightMapP input
+  let
+    neighbors :: Position -> List Position
+    neighbors p = map fst $ List.filter ((_ /= 9) <<< snd) $ adjacent heightMap p
   pure
     $ product
     $ map Set.size
     $ take 3
     $ sortBy (\a b -> invert $ comparing Set.size a b)
-    $ map (basin heightMap <<< fst)
+    $ map (reachable neighbors <<< fst)
     $ lowPoints heightMap
-  where
-  basin :: HeightMap -> Position -> Set Position
-  basin heightMap start = basinR Set.empty $ List.singleton start
-    where
-    basinR :: Set Position -> List Position -> Set Position
-    basinR seen queue = case List.uncons queue of
-      Just { head, tail } ->
-        let
-          next = adjacent heightMap head
-
-          notWalls = List.filter ((_ /= 9) <<< snd) next
-
-          unseen = List.filter (not <<< flip Set.member seen <<< fst) notWalls
-
-          seen' = seen <> Set.fromFoldable (map fst unseen)
-
-          queue' = map fst unseen <> tail
-        in
-          basinR seen' queue'
-      Nothing -> seen
