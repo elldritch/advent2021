@@ -12,14 +12,17 @@ module Advent2021.Bits
   , fromInt
   , padZerosTo
   , showBinaryString
+  , toBigInt
   , toInt
   ) where
 
 import Prelude
 import Advent2021.Parsers (digit)
 import Control.Alternative ((<|>))
+import Data.BigInt (BigInt)
+import Data.BigInt as BigInt
 import Data.Foldable (fold, foldr)
-import Data.Int (pow)
+import Data.Int as Int
 import Data.List.NonEmpty (NonEmptyList)
 import Data.List.NonEmpty as NEList
 import Data.Unfoldable1 (replicate1)
@@ -77,11 +80,20 @@ fromHexString :: Parser BitString
 fromHexString = NEList.concat <$> many1 fromHexDigit
 
 toInt :: BitString -> Int
-toInt bits =
-  _.acc
+toInt = toInt' Int.pow
+
+toBigInt :: BitString -> BigInt
+toBigInt = toInt' BigInt.pow
+
+two :: forall a. Semiring a => a
+two = one + one
+
+toInt' :: forall a. Semiring a => (a -> a -> a) -> BitString -> a
+toInt' pow bits =
+  _.number
     $ foldr
-        (\(Bit b) { acc, base } -> { acc: acc + if b then 2 `pow` base else 0, base: base + 1 })
-        ({ acc: 0, base: 0 })
+        (\(Bit b) { number, index } -> { number: number + if b then two `pow` index else zero, index: index + one })
+        ({ number: zero, index: zero })
         bits
 
 fromInt :: Int -> BitString
