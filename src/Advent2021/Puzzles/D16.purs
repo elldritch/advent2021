@@ -6,7 +6,6 @@ module Advent2021.Puzzles.D16
 import Prelude
 import Advent2021.Bits (Bit(..), BitString, bit0P, bit1P, fromBinaryDigit, fromHexString, showBinaryString)
 import Advent2021.Bits as Bits
-import Advent2021.Debug (spy', spyS')
 import Advent2021.Parsers (runParser)
 import Data.BigInt (BigInt)
 import Data.Either (Either(..))

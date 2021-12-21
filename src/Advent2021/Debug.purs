@@ -5,7 +5,7 @@ module Advent2021.Debug
   ) where
 
 import Prelude
-import Debug (spy, spyWith)
+import Debug (class DebugWarning, spy, spyWith)
 import Effect.Exception (throw)
 import Prim.TypeError (class Warn, Text)
 import Unsafe.Coerce (unsafeCoerce)
@@ -16,8 +16,8 @@ undefined = unsafeCoerce $ throw "undefined"
 debug :: Boolean
 debug = false
 
-spy' :: forall a. String -> a -> a
+spy' :: forall a. DebugWarning => String -> a -> a
 spy' msg = if debug then spy msg else identity
 
-spyS' :: forall a. Show a => String -> a -> a
+spyS' :: forall a. DebugWarning => Show a => String -> a -> a
 spyS' msg = if debug then spyWith msg show else identity
