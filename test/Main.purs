@@ -21,6 +21,7 @@ import Advent2021.Puzzles.D14Spec as D14Spec
 import Advent2021.Puzzles.D15Spec as D15Spec
 import Advent2021.Puzzles.D16Spec as D16Spec
 import Advent2021.Puzzles.D17Spec as D17Spec
+import Advent2021.Puzzles.D18Spec as D18Spec
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Test.Spec (describe)
@@ -51,3 +52,4 @@ main =
           D15Spec.spec
           D16Spec.spec
           D17Spec.spec
+          D18Spec.spec
