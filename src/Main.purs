@@ -21,6 +21,8 @@ import Advent2021.Puzzles.D15 as D15
 import Advent2021.Puzzles.D16 as D16
 import Advent2021.Puzzles.D17 as D17
 import Advent2021.Puzzles.D18 as D18
+import Advent2021.Puzzles.D19 as D19
+import Advent2021.Puzzles.D20 as D20
 import Data.Either (Either(..))
 import Data.Maybe (fromMaybe)
 import Effect (Effect)
@@ -92,6 +94,10 @@ main = do
     { day: 17, part: 2 } -> run inputFile D17.part2
     { day: 18, part: 1 } -> run inputFile D18.part1
     { day: 18, part: 2 } -> run inputFile D18.part2
+    { day: 19, part: 1 } -> run inputFile D19.part1
+    { day: 19, part: 2 } -> run inputFile D19.part2
+    { day: 20, part: 1 } -> run inputFile D20.part1
+    { day: 20, part: 2 } -> run inputFile D20.part2
     _ -> throw "Invalid puzzle day or part specified"
 
 run :: forall a. Show a => FilePath -> (String -> Either String a) -> Effect Unit
