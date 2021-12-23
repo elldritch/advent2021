@@ -4,7 +4,7 @@ module Advent2021.Puzzles.D14
   ) where
 
 import Prelude
-import Advent2021.Helpers (iterateN', uniqueCounts)
+import Advent2021.Helpers (iterateNM, uniqueCounts)
 import Advent2021.Parsers (newline, runParser)
 import Data.BigInt (BigInt)
 import Data.BigInt as BigInt
@@ -126,7 +126,7 @@ countElements pairs =
 simulate :: Int -> String -> Either String BigInt
 simulate n input = do
   { template, rules } <- runParser inputP input
-  polymerized <- iterateN' (step rules) (initial rules template) n
+  polymerized <- iterateNM (step rules) (initial rules template) n
   counts <-
     note "Invalid input: polymer has no pairs"
       $ NEList.fromFoldable

@@ -11,6 +11,7 @@
   , "either"
   , "exceptions"
   , "foldable-traversable"
+  , "identity"
   , "integers"
   , "lists"
   , "maybe"

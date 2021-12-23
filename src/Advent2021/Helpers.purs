@@ -1,14 +1,17 @@
 module Advent2021.Helpers
   ( fix
+  , fixM
   , iterateN
-  , iterateN'
+  , iterateNM
   , uniqueCounts
   ) where
 
 import Prelude
-import Control.Monad.Rec.Class (untilJust)
-import Control.Monad.State (State, evalState, get, put)
+import Control.Monad.Rec.Class (class MonadRec, untilJust)
+import Control.Monad.State.Trans (evalStateT, StateT, get, put)
+import Control.Monad.Trans.Class (lift)
 import Data.Foldable (class Foldable, foldl)
+import Data.Identity (Identity(..))
 import Data.List.Lazy (iterate)
 import Data.List.Lazy as ListL
 import Data.Map (Map)
@@ -19,19 +22,23 @@ import Partial.Unsafe (unsafePartial)
 iterateN :: forall a. (a -> a) -> a -> Int -> a
 iterateN f initial n = unsafePartial $ fromJust $ ListL.head $ ListL.drop n $ iterate f initial
 
-iterateN' :: forall m a. Monad m => (a -> m a) -> a -> Int -> m a
-iterateN' _ initial 0 = pure initial
+iterateNM :: forall m a. Monad m => (a -> m a) -> a -> Int -> m a
+iterateNM _ initial 0 = pure initial
 
-iterateN' f initial n = iterateN' f initial (n - 1) >>= f
+iterateNM f initial n = iterateNM f initial (n - 1) >>= f
 
 fix :: forall a. Eq a => (a -> a) -> a -> a
-fix f initial = evalState (untilJust $ f') initial
+fix f initial = x
   where
-  f' :: State a (Maybe a)
+  (Identity x) = fixM (pure <<< f) initial
+
+fixM :: forall m a. MonadRec m => Eq a => (a -> m a) -> a -> m a
+fixM f initial = evalStateT (untilJust f') initial
+  where
+  f' :: StateT a m (Maybe a)
   f' = do
     last <- get
-    let
-      next = f last
+    next <- lift $ f last
     if next == last then
       pure $ Just next
     else do

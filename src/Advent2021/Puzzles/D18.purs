@@ -4,18 +4,20 @@ module Advent2021.Puzzles.D18
   ) where
 
 import Prelude
-import Advent2021.Debug (spy', undefined)
-import Advent2021.Parsers (digit, integer, newline, runParser)
+import Advent2021.Helpers (fixM)
+import Advent2021.Parsers (integer, newline, runParser)
 import Control.Alternative ((<|>))
 import Data.Either (Either(..))
+import Data.Foldable (foldM)
 import Data.List (List(..), Pattern(..), (:))
 import Data.List as List
+import Data.List.NonEmpty (NonEmptyList)
+import Data.List.NonEmpty as NEList
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Unfoldable (replicate)
-import Effect.Exception.Unsafe (unsafeThrow)
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (char, eof)
-import Text.Parsing.StringParser.Combinators (sepEndBy)
+import Text.Parsing.StringParser.Combinators (sepEndBy1)
 
 type Pair a
   = { left :: a, right :: a }
@@ -32,12 +34,16 @@ pairP p = do
 newtype SnailfishNumber
   = SnailfishNumber (Pair SnailfishElement)
 
+derive instance eqSnailfishNumber :: Eq SnailfishNumber
+
 snailNumberP :: Parser SnailfishNumber
 snailNumberP = SnailfishNumber <$> pairP snailfishElementP
 
 data SnailfishElement
   = Pair (Pair SnailfishElement)
   | Regular Int
+
+derive instance eqSnailfishElement :: Eq SnailfishElement
 
 snailfishElementP :: Parser SnailfishElement
 snailfishElementP = pairP' <|> regularP
@@ -54,8 +60,8 @@ snailfishElementP = pairP' <|> regularP
   regularP :: Parser SnailfishElement
   regularP = Regular <$> integer
 
-inputP :: Parser (List SnailfishNumber)
-inputP = sepEndBy snailNumberP newline <* eof
+inputP :: Parser (NonEmptyList SnailfishNumber)
+inputP = sepEndBy1 snailNumberP newline <* eof
 
 -- Find the path to exploding pair
 -- Construct the expected path prefix
@@ -74,10 +80,10 @@ derive instance eqDirection :: Eq Direction
 type Path
   = List Direction
 
-explode :: SnailfishNumber -> Maybe SnailfishNumber
-explode snailfishNumber = do
-  explodingPair <- findExplodingPair snailfishNumber
-  pure $ mapExplosion explodingPair snailfishNumber
+explode :: SnailfishNumber -> Either String (Maybe SnailfishNumber)
+explode snailfishNumber = case findExplodingPair snailfishNumber of
+  Just explodingPair -> Just <$> mapExplosion explodingPair snailfishNumber
+  Nothing -> pure Nothing
   where
   findExplodingPair :: SnailfishNumber -> Maybe { explodingPairPath :: Path, explodingPair :: Pair Int }
   findExplodingPair (SnailfishNumber s) = findExplodingPairR 1 Nil $ Pair s
@@ -98,26 +104,31 @@ explode snailfishNumber = do
   mapExplosion ::
     { explodingPairPath :: Path, explodingPair :: Pair Int } ->
     SnailfishNumber ->
-    SnailfishNumber
+    Either String SnailfishNumber
   mapExplosion { explodingPairPath, explodingPair: { left: explodingLeft, right: explodingRight } } (SnailfishNumber s) = case mapExplosionR Nil $ Pair s of
-    Pair p -> SnailfishNumber p
-    Regular _ -> unsafeThrow "Impossible: root of exploded expression was not a pair"
+    Pair p -> pure $ SnailfishNumber p
+    Regular _ -> Left "Impossible: root of exploded expression was not a pair"
     where
+    -- Immediate left = find the deepest right turn, go left instead, then keep
+    -- going right until a regular number. There is no immediate left if and
+    -- only if the path is all lefts.
+    --
+    -- Vice versa for immediate right.
     sibling :: Direction -> Maybe Path
     sibling direction = do
       i <- List.elemLastIndex (opposite direction) explodingPairPath
       l' <- List.updateAt i direction explodingPairPath
       let
         turnsPrefix = List.take (i + 1) l'
+      -- Replicate 4 because pairs are nested 4 deep at most. Alternatively, use
+      -- an infinite lazy list here.
       pure $ turnsPrefix <> replicate 4 (opposite direction)
 
-    -- Immediate left = find the deepest right turn, go left instead, then keep going right until a regular number
-    -- There is no immediate left if and only if the path is all lefts
     pathToImmediateLeft :: Maybe Path
-    pathToImmediateLeft = spy' "path to immediate left" $ sibling ToLeft
+    pathToImmediateLeft = sibling ToLeft
 
     pathToImmediateRight :: Maybe Path
-    pathToImmediateRight = spy' "path to immediate right" $ sibling ToRight
+    pathToImmediateRight = sibling ToRight
 
     mapExplosionR :: Path -> SnailfishElement -> SnailfishElement
     mapExplosionR path (Pair { left, right }) =
@@ -140,16 +151,16 @@ explode snailfishNumber = do
         _ <- List.stripPrefix (Pattern path) p
         pure $ Regular $ r + toAdd
 
-split :: SnailfishNumber -> Maybe SnailfishNumber
+split :: SnailfishNumber -> Either String (Maybe SnailfishNumber)
 split (SnailfishNumber s) =
   let
     { splitted, element } = splitR false $ Pair s
   in
     if splitted then case element of
-      Pair s' -> Just $ SnailfishNumber s'
-      _ -> unsafeThrow "Impossible: root of split expression was not a pair"
+      Pair s' -> pure $ Just $ SnailfishNumber s'
+      _ -> Left "Impossible: root of split expression was not a pair"
     else
-      Nothing
+      pure $ Nothing
   where
   splitR :: Boolean -> SnailfishElement -> { splitted :: Boolean, element :: SnailfishElement }
   splitR true x = { splitted: true, element: x }
@@ -175,46 +186,35 @@ split (SnailfishNumber s) =
     else
       { splitted: false, element: Regular r }
 
-reduce :: SnailfishNumber -> SnailfishNumber
-reduce = undefined
-
-addSnail :: SnailfishNumber -> SnailfishNumber -> SnailfishNumber
-addSnail (SnailfishNumber a) (SnailfishNumber b) = SnailfishNumber { left: Pair a, right: Pair b }
+reduce :: SnailfishNumber -> Either String SnailfishNumber
+reduce = fixM reduce'
   where
-  reduce = undefined
+  reduce' s = do
+    exploded <- explode s
+    splitted <- split s
+    pure $ fromMaybe s $ exploded <|> splitted
 
-  explode :: SnailfishNumber -> { result :: SnailfishNumber, exploded :: Boolean }
-  explode = undefined
+snailfishAdd :: SnailfishNumber -> SnailfishNumber -> Either String SnailfishNumber
+snailfishAdd (SnailfishNumber a) (SnailfishNumber b) =
+  reduce
+    $ SnailfishNumber
+        { left: Pair a
+        , right: Pair b
+        }
 
-  split = undefined
+magnitude :: SnailfishNumber -> Int
+magnitude (SnailfishNumber s) = magnitudeR $ Pair s
+  where
+  magnitudeR :: SnailfishElement -> Int
+  magnitudeR (Pair { left, right }) = 3 * magnitudeR left + 2 * magnitudeR right
 
-explodeExamplesInput :: String
-explodeExamplesInput =
-  """[[[[[9,8],1],2],3],4]
-[7,[6,[5,[4,[3,2]]]]]
-[[6,[5,[4,[3,2]]]],1]
-[[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]
-[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]
-[[[[0,7],4],[[7,8],[6,0]]],[8,1]]
-"""
-
-splitExamplesInput :: String
-splitExamplesInput =
-  """[[[[0,7],4],[15,[0,13]]],[1,1]]
-[[[[0,7],4],[[7,8],[0,13]]],[1,1]]
-[[[[0,7],4],[[7,8],[0,[6,7]]]],[1,1]]
-"""
+  magnitudeR (Regular r) = r
 
 part1 :: String -> Either String Int
 part1 input = do
-  numbers <- spy' "numbers" <$> runParser inputP input
-  explodeExamples <- spy' "explodeExamples" <$> runParser inputP explodeExamplesInput
-  let
-    exploded = spy' "exploded" $ explode <$> explodeExamples
-  splitExamples <- spy' "splitExamples" <$> runParser inputP splitExamplesInput
-  let
-    splitted = spy' "splitted" $ split <$> splitExamples
-  pure 0
+  numbers <- runParser inputP input
+  result <- foldM snailfishAdd (NEList.head numbers) $ NEList.tail numbers
+  pure $ magnitude result
 
 part2 :: String -> Either String Int
 part2 input = pure 0
