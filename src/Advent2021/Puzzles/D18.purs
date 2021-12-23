@@ -6,7 +6,7 @@ module Advent2021.Puzzles.D18
 import Prelude
 import Advent2021.Helpers (fixM)
 import Advent2021.Parsers (integer, newline, runParser)
-import Control.Alternative ((<|>))
+import Control.Alternative (guard, (<|>))
 import Data.Either (Either(..))
 import Data.Foldable (foldM)
 import Data.List (List(..), Pattern(..), (:))
@@ -14,6 +14,9 @@ import Data.List as List
 import Data.List.NonEmpty (NonEmptyList)
 import Data.List.NonEmpty as NEList
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Semigroup.Foldable (maximumBy)
+import Data.Traversable (sequence)
+import Data.Tuple (Tuple(..), uncurry)
 import Data.Unfoldable (replicate)
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (char, eof)
@@ -36,6 +39,9 @@ newtype SnailfishNumber
 
 derive instance eqSnailfishNumber :: Eq SnailfishNumber
 
+instance showSnailfishNumber :: Show SnailfishNumber where
+  show (SnailfishNumber s) = show $ Pair s
+
 snailNumberP :: Parser SnailfishNumber
 snailNumberP = SnailfishNumber <$> pairP snailfishElementP
 
@@ -44,6 +50,10 @@ data SnailfishElement
   | Regular Int
 
 derive instance eqSnailfishElement :: Eq SnailfishElement
+
+instance showSnailfishElement :: Show SnailfishElement where
+  show (Pair { left, right }) = "[" <> show left <> "," <> show right <> "]"
+  show (Regular r) = show r
 
 snailfishElementP :: Parser SnailfishElement
 snailfishElementP = pairP' <|> regularP
@@ -213,8 +223,21 @@ magnitude (SnailfishNumber s) = magnitudeR $ Pair s
 part1 :: String -> Either String Int
 part1 input = do
   numbers <- runParser inputP input
-  result <- foldM snailfishAdd (NEList.head numbers) $ NEList.tail numbers
-  pure $ magnitude result
+  sum <- foldM snailfishAdd (NEList.head numbers) $ NEList.tail numbers
+  pure $ magnitude sum
 
 part2 :: String -> Either String Int
-part2 input = pure 0
+part2 input = do
+  numbers <- runParser inputP input
+  case NEList.fromList $ pairs $ NEList.toList numbers of
+    Just ps -> do
+      sums <- sequence $ uncurry snailfishAdd <$> ps
+      pure $ magnitude $ maximumBy (comparing magnitude) sums
+    Nothing -> Left "Impossible: non-empty list produced empty pairs"
+  where
+  pairs :: forall a. Eq a => List a -> List (Tuple a a)
+  pairs xs = do
+    x1 <- xs
+    x2 <- xs
+    guard $ x1 /= x2
+    pure $ Tuple x1 x2

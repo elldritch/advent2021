@@ -99,8 +99,7 @@ showGrid = showGrid' show
 
 showGrid' :: forall t. (t -> String) -> Grid t -> String
 showGrid' show' grid =
-  String.joinWith "\n"
-    $ Array.fromFoldable
+  List.intercalate "\n"
     $ map (String.joinWith "" <<< Array.fromFoldable <<< (map \(Tuple _ v) -> show' v))
     $ groupBy ((_ == EQ) <.. comparing (_.y <<< fst))
     $ sortBy (comparing $ _.y <<< fst)

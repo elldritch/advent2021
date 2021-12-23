@@ -1,6 +1,7 @@
 module Advent2021.Debug
   ( spy'
   , spyS'
+  , spyW'
   , undefined
   ) where
 
@@ -20,3 +21,6 @@ spy' msg = if debug then spy msg else identity
 
 spyS' :: forall a. DebugWarning => Show a => String -> a -> a
 spyS' msg = if debug then spyWith msg show else identity
+
+spyW' :: forall a. DebugWarning => String -> (a -> String) -> a -> a
+spyW' msg f = if debug then spyWith msg f else identity

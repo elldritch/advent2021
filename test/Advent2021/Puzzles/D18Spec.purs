@@ -85,3 +85,5 @@ spec =
       D18.part1 input5 `shouldSucceed` 1137
       D18.part1 input6 `shouldSucceed` 3488
       D18.part1 input7 `shouldSucceed` 4140
+    it "finds the largest pairwise sum" do
+      D18.part2 input7 `shouldSucceed` 3993
