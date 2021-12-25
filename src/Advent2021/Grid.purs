@@ -15,10 +15,11 @@ module Advent2021.Grid
   ) where
 
 import Prelude
+
 import Advent2021.Parsers (digit, newline)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEArray
-import Data.Foldable (class Foldable, foldl)
+import Data.Foldable (class Foldable, foldl, intercalate)
 import Data.FoldableWithIndex (class FoldableWithIndex, foldlWithIndex)
 import Data.FunctorWithIndex (class FunctorWithIndex, mapWithIndex)
 import Data.List (List(..), groupBy, range, sortBy, (:))
@@ -99,7 +100,7 @@ showGrid = showGrid' show
 
 showGrid' :: forall t. (t -> String) -> Grid t -> String
 showGrid' show' grid =
-  List.intercalate "\n"
+  intercalate "\n"
     $ map (String.joinWith "" <<< Array.fromFoldable <<< (map \(Tuple _ v) -> show' v))
     $ groupBy ((_ == EQ) <.. comparing (_.y <<< fst))
     $ sortBy (comparing $ _.y <<< fst)

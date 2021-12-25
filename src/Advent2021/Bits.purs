@@ -21,10 +21,12 @@ import Advent2021.Parsers (digit)
 import Control.Alternative ((<|>))
 import Data.BigInt (BigInt)
 import Data.BigInt as BigInt
+import Data.Enum (class BoundedEnum, class Enum, Cardinality(..), cardinality)
 import Data.Foldable (fold, foldr)
 import Data.Int as Int
 import Data.List.NonEmpty (NonEmptyList)
 import Data.List.NonEmpty as NEList
+import Data.Maybe (Maybe(..))
 import Data.Unfoldable1 (replicate1)
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (char)
@@ -45,11 +47,19 @@ _1 = Bit true
 bit1P :: Parser Bit
 bit1P = char '1' $> Bit true
 
+_0 :: Bit
+_0 = Bit false
+
 bit0P :: Parser Bit
 bit0P = char '0' $> Bit false
 
-_0 :: Bit
-_0 = Bit false
+derive newtype instance ordBit :: Ord Bit
+
+derive newtype instance boundedBit :: Bounded Bit
+
+derive newtype instance enumBit :: Enum Bit
+
+derive newtype instance boundedEnumBit :: BoundedEnum Bit
 
 fromBinaryDigit :: Parser Bit
 fromBinaryDigit = bit1P <|> bit0P

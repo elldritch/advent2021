@@ -6,24 +6,18 @@ import Prelude
 import Advent2021.Bits (_0, _1, fromBinaryString, fromHexString, fromInt, showBinaryString, toInt)
 import Advent2021.Parsers (runParser)
 import Advent2021.Spec.Assertions (fromJust, fromRight)
+import Advent2021.Spec.Properties (Positive(..))
 import Control.Monad.Error.Class (class MonadThrow)
 import Data.List.NonEmpty (NonEmptyList)
 import Data.List.NonEmpty as NEList
 import Effect.Exception (Error)
-import Test.QuickCheck (class Arbitrary, arbitrary, (===))
-import Test.QuickCheck.Gen (suchThat)
+import Test.QuickCheck ((===))
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.QuickCheck (quickCheck)
 
 fromArray :: forall m a. MonadThrow Error m => Array a -> m (NonEmptyList a)
 fromArray = fromJust <<< NEList.fromFoldable
-
-newtype Positive
-  = Positive Int
-
-instance arbitraryPositive :: Arbitrary Positive where
-  arbitrary = Positive <$> arbitrary `suchThat` (_ > 0)
 
 spec :: Spec Unit
 spec =

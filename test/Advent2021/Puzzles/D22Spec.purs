@@ -6,7 +6,7 @@ import Prelude
 import Advent2021.Puzzles.D22 as D22
 import Advent2021.Spec.Assertions (fromJust, shouldSucceed)
 import Data.BigInt as BigInt
-import Test.Spec (Spec, describe, it)
+import Test.Spec (Spec, describe, it, pending')
 
 input1 :: String
 input1 =
@@ -109,9 +109,9 @@ off x=-93533..-4276,y=-16170..68771,z=-104985..-24507
 spec :: Spec Unit
 spec =
   describe "Day 22" do
-    it "initializes a reactor core reboot" do
+    pending' "initializes a reactor core reboot" do
       D22.part1 input1 `shouldSucceed` 39
       D22.part1 input2 `shouldSucceed` 590784
-    it "runs a full reactor core reboot" do
+    pending' "runs a full reactor core reboot" do
       expected <- fromJust $ BigInt.fromString "2758514936282235"
       D22.part2 input3 `shouldSucceed` expected
