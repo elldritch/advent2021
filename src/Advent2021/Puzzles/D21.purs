@@ -7,6 +7,8 @@ import Prelude
 import Advent2021.Parsers (integer, newline, runParser)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (class MonadState, evalState, get, put)
+import Data.BigInt (BigInt)
+import Data.BigInt as BigInt
 import Data.Either (Either)
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (eof, string)
@@ -107,5 +109,5 @@ part1 input = do
       P2 -> s2
   pure $ losingScore * diceRolls
 
-part2 :: String -> Either String Int
-part2 input = pure 0
+part2 :: String -> Either String BigInt
+part2 input = pure $ BigInt.fromInt 0
