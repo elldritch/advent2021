@@ -6,7 +6,7 @@ module Advent2021.Puzzles.D15
 import Prelude
 import Advent2021.Grid (Grid, Position, adjacent, gridP)
 import Advent2021.Grid as Grid
-import Advent2021.Parsers (runParser)
+import Advent2021.Parsers (digit, runParser)
 import Advent2021.Paths (aStar)
 import Data.Either (Either, note)
 import Data.Foldable (sum)
@@ -16,6 +16,7 @@ import Data.Ord (abs)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Data.Unfoldable1 (range)
+import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (eof)
 
 type Risk
@@ -23,6 +24,9 @@ type Risk
 
 type Cavern
   = Grid Risk
+
+inputP :: Parser Cavern
+inputP = gridP digit <* eof
 
 lowestRiskPath :: Grid Risk -> Either String Int
 lowestRiskPath cavern = do
@@ -42,7 +46,7 @@ lowestRiskPath cavern = do
 
 part1 :: String -> Either String Int
 part1 input = do
-  cavern <- runParser (gridP identity <* eof) input
+  cavern <- runParser inputP input
   lowestRiskPath cavern
 
 type GridEntries t
@@ -50,7 +54,7 @@ type GridEntries t
 
 part2 :: String -> Either String Int
 part2 input = do
-  cavern <- runParser (gridP identity <* eof) input
+  cavern <- runParser inputP input
   let
     tiles :: GridEntries Risk
     tiles =

@@ -1,6 +1,7 @@
 module Advent2021.Helpers
   ( fix
   , fixM
+  , fixM'
   , iterateN
   , iterateNM
   , uniqueCounts
@@ -18,6 +19,7 @@ import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromJust)
 import Partial.Unsafe (unsafePartial)
+import PointFree ((<..))
 
 iterateN :: forall a. (a -> a) -> a -> Int -> a
 iterateN f initial n = unsafePartial $ fromJust $ ListL.head $ ListL.drop n $ iterate f initial
@@ -33,16 +35,19 @@ fix f initial = x
   (Identity x) = fixM (pure <<< f) initial
 
 fixM :: forall m a. MonadRec m => Eq a => (a -> m a) -> a -> m a
-fixM f initial = evalStateT (untilJust f') initial
+fixM = map _.result <.. fixM'
+
+fixM' :: forall m a. MonadRec m => Eq a => (a -> m a) -> a -> m { result :: a, iterations :: Int }
+fixM' f initial = evalStateT (untilJust f') { result: initial, iterations: 0 }
   where
-  f' :: StateT a m (Maybe a)
+  f' :: StateT { result :: a, iterations :: Int } m (Maybe { result :: a, iterations :: Int })
   f' = do
-    last <- get
+    { result: last, iterations } <- get
     next <- lift $ f last
     if next == last then
-      pure $ Just next
+      pure $ Just { result: next, iterations }
     else do
-      put next
+      put { result: next, iterations: iterations + 1 }
       pure Nothing
 
 uniqueCounts :: forall f a i. Foldable f => Ord a => Semiring i => f a -> Map a i

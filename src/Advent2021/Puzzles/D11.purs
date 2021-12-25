@@ -7,7 +7,7 @@ import Prelude
 import Advent2021.Grid (Grid, around, gridP)
 import Advent2021.Grid as Grid
 import Advent2021.Helpers (fix)
-import Advent2021.Parsers (runParser)
+import Advent2021.Parsers (digit, runParser)
 import Data.Either (Either, note)
 import Data.Foldable (all, foldl)
 import Data.FunctorWithIndex (mapWithIndex)
@@ -27,7 +27,7 @@ type Octopuses
   = Grid Energy
 
 octopusesP :: Parser Octopuses
-octopusesP = gridP identity <* eof
+octopusesP = gridP digit <* eof
 
 step :: Octopuses -> Octopuses
 step prev = fix flash incremented

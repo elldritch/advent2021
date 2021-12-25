@@ -6,7 +6,7 @@ module Advent2021.Puzzles.D9
 import Prelude
 import Advent2021.Grid (Grid, Position, adjacent, gridP)
 import Advent2021.Grid as Grid
-import Advent2021.Parsers (runParser)
+import Advent2021.Parsers (digit, runParser)
 import Advent2021.Paths (reachable)
 import Data.Either (Either)
 import Data.Foldable (product)
@@ -26,7 +26,7 @@ type HeightMap
   = Grid Height
 
 heightMapP :: Parser HeightMap
-heightMapP = gridP identity <* eof
+heightMapP = gridP digit <* eof
 
 lowPoints :: HeightMap -> List (Tuple Position Height)
 lowPoints heightMap =

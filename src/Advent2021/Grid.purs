@@ -15,8 +15,7 @@ module Advent2021.Grid
   ) where
 
 import Prelude
-
-import Advent2021.Parsers (digit, newline)
+import Advent2021.Parsers (newline)
 import Data.Array as Array
 import Data.Array.NonEmpty as NEArray
 import Data.Foldable (class Foldable, foldl, intercalate)
@@ -77,9 +76,9 @@ derive newtype instance traversableWithIndexGrid :: TraversableWithIndex Positio
 unGrid :: forall t. Grid t -> Map Position t
 unGrid (Grid m) = m
 
-gridP :: forall t. (Int -> t) -> Parser (Grid t)
-gridP fromDigit = do
-  cells <- sepEndBy1 (many1 $ fromDigit <$> digit) newline
+gridP :: forall t. Parser t -> Parser (Grid t)
+gridP parseChar = do
+  cells <- sepEndBy1 (many1 parseChar) newline
   pure $ Grid $ Map.fromFoldable $ addPositions $ cells
   where
   addPositions :: NonEmptyList (NonEmptyList t) -> NonEmptyList (Tuple Position t)
