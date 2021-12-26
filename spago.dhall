@@ -29,6 +29,7 @@
   , "prelude"
   , "psci-support"
   , "quickcheck"
+  , "sequences"
   , "spec"
   , "spec-quickcheck"
   , "string-parsers"

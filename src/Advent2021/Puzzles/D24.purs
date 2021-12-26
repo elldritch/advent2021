@@ -114,6 +114,13 @@ run = runR initialRegisters
 
   runR registers Nil _ = pure registers
 
+{-
+
+Maybe I need to do some kind of static analysis? This naive search is way too
+slow, and runs out of heap before it completes.
+
+-}
+
 part1 :: String -> Either String String
 part1 input = do
   program <- runParser inputP input

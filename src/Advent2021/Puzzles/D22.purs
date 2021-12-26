@@ -106,5 +106,17 @@ part1 input = do
     initializedReactor = foldl applyStep Map.empty initializationProcedure
   pure $ Map.size $ Map.filter (_ == On) initializedReactor
 
+{-
+
+Instead of individual cubes, track bounding non-overlapping cuboids. Avoid
+double-counting new cuboids by tracking cuboids of on and off cubes. Break new
+cuboids into non-overlapping ones and test new cuboids against every known
+cuboid.
+
+(Don't forget, you can take a chunk out of a corner of a cuboid by turning off
+just the corner tip. This splits the 1 on cuboid into 7 (8 pieces - 1).)
+
+-}
+
 part2 :: String -> Either String BigInt
 part2 input = pure $ BigInt.fromInt 0

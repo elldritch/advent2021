@@ -6,7 +6,7 @@ import Prelude
 import Advent2021.Puzzles.D22 as D22
 import Advent2021.Spec.Assertions (fromJust, shouldSucceed)
 import Data.BigInt as BigInt
-import Test.Spec (Spec, describe, it, pending')
+import Test.Spec (Spec, describe, pending')
 
 input1 :: String
 input1 =

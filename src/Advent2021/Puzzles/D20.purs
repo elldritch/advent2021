@@ -22,6 +22,16 @@ pixelP = (char '#' $> Light) <|> (char '.' $> Dark)
 inputP :: Parser { algorithm :: NonEmptyList Pixel, image :: Grid Pixel }
 inputP = undefined
 
+{-
+
+Only track changes within the "active" boundary, and for the other infinite
+cells have a single "background" state.
+
+Remember, the active boundary expands on each enhancement step to include
+any pixel within 3 pixels of a non-background pixel.
+
+-}
+
 part1 :: String -> Either String Int
 part1 input = pure 0
 

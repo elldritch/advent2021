@@ -4,17 +4,29 @@ module Advent2021.Puzzles.D21
   ) where
 
 import Prelude
+import Advent2021.Helpers (uniqueCounts)
 import Advent2021.Parsers (integer, newline, runParser)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (class MonadState, evalState, get, put)
 import Data.BigInt (BigInt)
 import Data.BigInt as BigInt
 import Data.Either (Either)
+import Data.Foldable (sum)
+import Data.List as List
+import Data.Map (Map)
+import Data.Map as Map
+import Data.Maybe (Maybe(..))
+import Data.Sequence (Seq)
+import Data.Sequence as Seq
+import Data.Tuple (Tuple(..))
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (eof, string)
 import Text.Parsing.StringParser.Combinators (optional)
 
-inputP :: Parser { p1 :: Int, p2 :: Int }
+type StartingPositions
+  = { p1 :: Int, p2 :: Int }
+
+inputP :: Parser StartingPositions
 inputP = do
   _ <- string "Player 1 starting position: "
   p1 <- integer
@@ -29,6 +41,14 @@ data Player
   = P1
   | P2
 
+derive instance eqPlayer :: Eq Player
+
+derive instance ordPlayer :: Ord Player
+
+instance showPlayer :: Show Player where
+  show P1 = "P1"
+  show P2 = "P2"
+
 type PlayerState
   = { position :: Int
     , score :: Int
@@ -40,8 +60,8 @@ type Game
     , toPlay :: Player
     }
 
-createGame :: { p1 :: Int, p2 :: Int } -> Game
-createGame { p1, p2 } =
+initialGameState :: StartingPositions -> Game
+initialGameState { p1, p2 } =
   { toPlay: P1
   , player1: { position: p1, score: 0 }
   , player2: { position: p2, score: 0 }
@@ -95,11 +115,11 @@ play dice initial = tailRecM resultR { step: initial, turns: 0 }
 
 part1 :: String -> Either String Int
 part1 input = do
-  positions <- runParser inputP input
+  start <- runParser inputP input
   let
     { step: { player1: { score: s1 }, player2: { score: s2 }, toPlay }, turns } =
       evalState
-        (play deterministicDice $ createGame positions)
+        (play deterministicDice $ initialGameState start)
         { nextRoll: 1 }
 
     diceRolls = turns * 3
@@ -109,5 +129,79 @@ part1 input = do
       P2 -> s2
   pure $ losingScore * diceRolls
 
+{-
+
+Part 2 is a totally different algorithm. Paths don't matter, but the count of
+paths does.
+
+Keep track of score tuple {p1, p2}. Start at puzzle input positions. How many
+ways can one get to {1, 0}? What about {2, 0}? Add up from previous positions.
+
+What about going from {1, 0} to {3, 0}? (Can I just sum path counts here? Or do
+I need to account for current player positions, maybe as extra tuple elements?)
+
+(With extra tuple elements, I still only need to track (21, 21, 10, 10) = 44.1k
+elements.)
+
+Get sums up until {21, _} or {_, 21}, which is the end of the game.
+
+(How do I do iteration order? I could try to go recursively and pull from the
+top, but since that requires multiple pulls (for every {21, _}), it might be
+easier to build bottoms-up. Use recursion and enqueue the next quantum rolls.)
+
+(Iterate upwards by points! Use the Z^2 iteration order to make sure none are
+missed. This ensures a fixed number of iterations.)
+
+-}
+type QuantumGameCount
+  = BigInt
+
+type Memo
+  = Map Game QuantumGameCount
+
 part2 :: String -> Either String BigInt
-part2 input = pure $ BigInt.fromInt 0
+part2 input = do
+  start <- runParser inputP input
+  let
+    memo = computeScores start
+
+    p1Wins = countWinningGames P1 memo
+
+    p2Wins = countWinningGames P2 memo
+  pure $ max p1Wins p2Wins
+  where
+  countWinningGames :: Player -> Memo -> BigInt
+  countWinningGames player memo =
+    sum
+      $ Map.values
+      $ Map.filterKeys
+          ( \{ player1: { score: s1 }, player2: { score: s2 } } -> case player of
+              P1 -> s1 == 21
+              P2 -> s2 == 21
+          )
+          memo
+
+  computeScores :: StartingPositions -> Memo
+  computeScores start =
+    computeScoresR
+      (Seq.singleton $ Tuple (initialGameState start) (BigInt.fromInt 1))
+      $ Map.empty
+
+  computeScoresR :: Seq (Tuple Game QuantumGameCount) -> Memo -> Memo
+  computeScoresR queue memo = case Seq.uncons queue of
+    Just (Tuple (Tuple game count) rest) ->
+      if isCompleted game then
+        computeScoresR rest withGame
+      else
+        computeScoresR (rest `Seq.append` Map.toUnfoldable reachable) withGame
+      where
+      withGame = Map.insertWith (+) game count memo
+
+      reachable = (_ * count) <$> nextPositions game
+    Nothing -> memo
+
+  nextPositions :: Game -> Map Game QuantumGameCount
+  nextPositions step = uniqueCounts $ turn step $ List.range 1 3
+
+  isCompleted :: Game -> Boolean
+  isCompleted { player1: { score: s1 }, player2: { score: s2 } } = s1 >= 21 || s2 >= 21
