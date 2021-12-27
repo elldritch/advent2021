@@ -4,21 +4,27 @@ module Advent2021.Puzzles.D21
   ) where
 
 import Prelude
+import Advent2021.Debug (spy', spyS', spyW')
 import Advent2021.Helpers (uniqueCounts)
 import Advent2021.Parsers (integer, newline, runParser)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (class MonadState, evalState, get, put)
 import Data.BigInt (BigInt)
 import Data.BigInt as BigInt
+import Data.DateTime.Instant (unInstant)
 import Data.Either (Either)
-import Data.Foldable (sum)
+import Data.Foldable (foldl, sum)
+import Data.List (List(..), (:))
 import Data.List as List
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
-import Data.Sequence (Seq)
-import Data.Sequence as Seq
-import Data.Tuple (Tuple(..))
+import Data.Maybe (fromMaybe)
+import Data.Time.Duration (Milliseconds(..))
+import Data.Tuple (Tuple(..), snd)
+import Effect.Class.Console (time)
+import Effect.Console (log, timeLog)
+import Effect.Now (now, nowDateTime, nowTime)
+import Effect.Unsafe (unsafePerformEffect)
 import Text.Parsing.StringParser (Parser)
 import Text.Parsing.StringParser.CodePoints (eof, string)
 import Text.Parsing.StringParser.Combinators (optional)
@@ -170,6 +176,25 @@ part2 input = do
     p2Wins = countWinningGames P2 memo
   pure $ max p1Wins p2Wins
   where
+  statesByScore :: List Game
+  statesByScore = do
+    s1 <- List.range 0 21
+    s2 <- List.range 0 s1
+    p1 <- List.range 1 10
+    p2 <- List.range 1 10
+    toPlay <- P1 : P2 : Nil
+    pure
+      $ { player1:
+            { position: p1
+            , score: s1
+            }
+        , player2:
+            { position: p2
+            , score: s2
+            }
+        , toPlay
+        }
+
   countWinningGames :: Player -> Memo -> BigInt
   countWinningGames player memo =
     sum
@@ -183,25 +208,33 @@ part2 input = do
 
   computeScores :: StartingPositions -> Memo
   computeScores start =
-    computeScoresR
-      (Seq.singleton $ Tuple (initialGameState start) (BigInt.fromInt 1))
-      $ Map.empty
+    foldl
+      computeNextScores
+      (Map.singleton (initialGameState start) (BigInt.fromInt 1))
+      $ spyW' "number of states" (show <<< List.length)
+      $ List.zip (List.range 0 $ List.length statesByScore)
+      $ unsafePerformEffect
+      $ do
+          time "computeScores"
+          pure statesByScore
 
-  computeScoresR :: Seq (Tuple Game QuantumGameCount) -> Memo -> Memo
-  computeScoresR queue memo = case Seq.uncons queue of
-    Just (Tuple (Tuple game count) rest) ->
-      if isCompleted game then
-        computeScoresR rest withGame
+  computeNextScores :: Memo -> Tuple Int Game -> Memo
+  computeNextScores prev (Tuple i game) = prev `Map.unionWith (+)` nexts
+    where
+    _ =
+      if i `mod` 100 == 0 then
+        unsafePerformEffect
+          $ do
+              (Milliseconds currentTime) <- unInstant <$> now
+              log $ show currentTime <> "," <> show i
       else
-        computeScoresR (rest `Seq.append` Map.toUnfoldable reachable) withGame
-      where
-      withGame = Map.insertWith (+) game count memo
+        unit
 
-      reachable = (_ * count) <$> nextPositions game
-    Nothing -> memo
+    z = BigInt.fromInt 0
+
+    count = fromMaybe z $ Map.lookup game prev
+
+    nexts = (_ * count) <$> nextPositions game
 
   nextPositions :: Game -> Map Game QuantumGameCount
   nextPositions step = uniqueCounts $ turn step $ List.range 1 3
-
-  isCompleted :: Game -> Boolean
-  isCompleted { player1: { score: s1 }, player2: { score: s2 } } = s1 >= 21 || s2 >= 21
